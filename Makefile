@@ -1,3 +1,7 @@
+CXX_SOURCES = $(shell find . -name '*.cpp' -o -name '*.cxx' -o -name '*.cc' -o -name '*.c++' -o -name '*.hpp' -o -name '*.h')
+
+format:
+	clang-format -i -style=file $(CXX_SOURCES)
 
 install-deps:
 	conda env create --file conda.yaml

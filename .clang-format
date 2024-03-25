@@ -1,0 +1,47 @@
+# This is the version of the clang-format style to use.
+BasedOnStyle: Google
+
+# Indent width for line continuations and comments.
+IndentWidth: 4
+
+# Indent case labels one level from the switch statement.
+IndentCaseLabels: true
+
+# Pointer and reference alignment style.
+PointerAlignment: Left
+
+# Indent width for line continuations.
+ContinuationIndentWidth: 4
+
+# Align escaped newlines as far left as possible.
+AlignEscapedNewlines: Left
+
+# Indent width for constructor initializer lists.
+ConstructorInitializerIndentWidth: 4
+
+# Indent width for lambdas.
+LambdaBodyIndentation: OuterScope
+
+# Align trailing comments.
+AlignTrailingComments: true
+
+# Align consecutive assignments.
+AlignConsecutiveAssignments: true
+
+# Align consecutive declarations.
+AlignConsecutiveDeclarations: true
+
+# Align consecutive bitfield members.
+AlignConsecutiveBitFields: true
+
+# Column limit for restructuring comments.
+ReflowComments: true
+
+# Sort includes in a specific order.
+SortIncludes: CaseSensitive
+
+# Specify the maximum number of consecutive empty lines.
+MaxEmptyLinesToKeep: 2
+
+# Indent access modifiers to align with class/struct members.
+AccessModifierOffset: -4
