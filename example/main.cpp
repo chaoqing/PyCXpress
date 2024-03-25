@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+
 #include "PyCXpress.hpp"
 #include "Utils.hpp"
 
@@ -11,8 +15,26 @@ void show_test(pcx::PythonInterpreter &python) {
 
     memcpy(python.set_buffer("input_a", {3, 2}), data.data(),
            data.size() * sizeof(float));
+    memcpy(python.set_buffer("input_b", {3, 2}), data.data(),
+           data.size() * sizeof(float));
 
-    python.show_buffer("input_a");
+    python.run();
+
+    void               *p = nullptr;
+    std::vector<size_t> shape;
+    std::tie(p, shape) = python.get_buffer("output_a");
+
+    std::cout << "output shape: ";
+    std::copy(shape.begin(), shape.end(),
+              std::ostream_iterator<double>(std::cout, ", "));
+    std::cout << std::endl;
+
+    size_t size =
+        std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int>());
+    std::cout << "output data: ";
+    std::copy((float *)p, (float *)p + size,
+              std::ostream_iterator<double>(std::cout, ", "));
+    std::cout << std::endl;
 }
 
 int main(int argc, char *argv[]) {
