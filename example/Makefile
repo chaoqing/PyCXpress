@@ -2,7 +2,7 @@
 CC = c++
 
 # Compiler flags
-CFLAGS = -O3 -Wall -std=c++17 -fPIC
+CFLAGS = -g -Wall -std=c++17 -fPIC
 CFLAGS = -I../src/cpp
 CFLAGS += $(shell python3-config --cflags --ldflags --embed)
 CFLAGS += $(shell python3 -m pybind11 --includes)
