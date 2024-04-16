@@ -5,7 +5,7 @@ CC = c++
 CFLAGS = -g -Wall -std=c++17 -fPIC
 CFLAGS = -I../src/cpp
 CFLAGS += $(shell python3-config --cflags --ldflags --embed)
-CFLAGS += $(shell python3 -m pybind11 --includes)
+CFLAGS += $(shell PYTHONPATH=../src/ python3 -m PyCXpress --includes) -I ../src/include
 
 # The build target executable
 TARGET = example.out
@@ -37,7 +37,7 @@ clean:
 	rm -f $(OBJECTS) $(DEPENDS) $(TARGET)
 
 run: $(TARGET)
-	./$(TARGET)
+	PYTHONPATH=../src/ ./$(TARGET)
 
 memcheck: $(TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./$(TARGET)
