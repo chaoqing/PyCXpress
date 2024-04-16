@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/cpp",
+                "${workspaceFolder}/src/PyCXpress/include",
                 "/opt/conda/envs/py38/include/python3.8",
                 "/opt/conda/envs/py38/lib/python3.8/site-packages/pybind11/include"
             ],

@@ -1,9 +1,22 @@
 #* Variables
 SHELL := /usr/bin/env bash
-PYTHON := python
-PYTHONPATH := `pwd`
 
-CXX_SOURCES = $(shell find . -name '*.cpp' -o -name '*.cxx' -o -name '*.cc' -o -name '*.c++' -o -name '*.hpp' -o -name '*.h')
+THIS_MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
+REPO_DIR := $(patsubst %/,%,$(dir $(THIS_MAKEFILE)))
+REPO_PREFIX := ../$(notdir $(abspath $(REPO_DIR)))
+
+PYTHON := python3
+PYTHONPATH := $(REPO_DIR)/src
+
+CXX_SOURCES = $(shell find $(REPO_DIR) -name '*.cpp' -o -name '*.cxx' -o -name '*.cc' -o -name '*.c++' -o -name '*.hpp' -o -name '*.h')
+
+#* Makefile debugging
+print-%: ; @$(warning $* is $($*) ($(value $*)) (from $(origin $*)))
+
+define message
+@echo -n "make[top]: "
+@echo $(1)
+endef
 
 #* Poetry
 .PHONY: poetry-download
@@ -104,7 +117,7 @@ pytestcache-remove:
 
 .PHONY: build-dist
 build-dist:
-	poetry run python -m build --outdir dist/
+	$(PYTHON) -m build --outdir dist/
 
 .PHONY: build-remove
 build-remove:

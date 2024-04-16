@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "PyCXpress"
-version = "0.0.2"
+version = "0.0.3"
 description = "PyCXpress is a high-performance hybrid framework that seamlessly integrates Python and C++ to harness the flexibility of Python and the speed of C++ for efficient and expressive computation, particularly in the realm of deep learning and numerical computing."
 readme = "README.md"
 authors = ["chaoqing <chaoqingwang.nick@gmail.com>"]
@@ -15,17 +15,13 @@ homepage = "https://github.com/chaoqing/PyCXpress"
 packages = [
     { include = "PyCXpress", from = "src" },
 ]
-include = [
-    { path = "src/cpp/", format = ["sdist", "wheel"] },
-    { path = "example/", format = ["sdist", "wheel"] },
-]
 
 
 # Keywords description https://python-poetry.org/docs/pyproject/#keywords
-keywords = []  #! Update me
+keywords = ["CPP", "Embdedding"]
 
 # Pypi classifiers: https://pypi.org/classifiers/
-classifiers = [  #! Update me
+classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
@@ -38,7 +34,7 @@ classifiers = [  #! Update me
 
 [tool.poetry.scripts]
 # Entry points for the package https://python-poetry.org/docs/pyproject/#scripts
-"PyCXpress" = "PyCXpress.__main__:main"
+"pycxpress" = "PyCXpress.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -144,7 +140,7 @@ addopts = [
 source = ["tests"]
 
 [coverage.paths]
-source = "PyCXpress"
+source = "src"
 
 [coverage.run]
 branch = true

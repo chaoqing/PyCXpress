@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) 启动",
+            "name": "(gdb) on Example",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/example/example.out",
+            "program": "${workspaceFolder}/src/PyCXpress/example/example.out",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/example",
+            "cwd": "${workspaceFolder}/src/PyCXpress/example/",
             "environment": [{
                 "name": "PATH",
                 "value": "/opt/conda/envs/py38/bin"

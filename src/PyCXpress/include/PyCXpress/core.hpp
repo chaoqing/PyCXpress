@@ -10,13 +10,22 @@
 #include <string>
 #include <vector>
 
-#include "Utils.hpp"
+#include "utils.hpp"
+
+#if !defined(PYCXPRESS_EXPORT)
+#    if defined(WIN32) || defined(_WIN32)
+#        define PYCXPRESS_EXPORT __declspec(dllexport)
+#    else
+#        define PYCXPRESS_EXPORT __attribute__((visibility("default")))
+#    endif 
+#endif 
 
 namespace PyCXpress {
 namespace py = pybind11;
 using namespace utils;
 
-class Buffer {
+class PYCXPRESS_EXPORT
+Buffer {
     typedef unsigned char Bytes;
 
     template <typename T>
@@ -70,6 +79,9 @@ public:
         } else if (data_type == "double") {
             m_converter = __to_array<double>;
             m_length /= sizeof(double);
+        } else if (data_type == "char") {
+            m_converter = __to_array<char>;
+            m_length /= sizeof(char);
         } else {
             throw NotImplementedError(data_type);
         }
@@ -104,7 +116,8 @@ private:
     py::array (*m_converter)(const std::vector<size_t> &, void *);
 };
 
-class PythonInterpreter {
+class PYCXPRESS_EXPORT
+PythonInterpreter {
 public:
     explicit PythonInterpreter(bool init_signal_handlers = true, int argc = 0,
                                const char *const *argv      = nullptr,
@@ -178,7 +191,7 @@ private:
             auto meta = d->cast<py::tuple>();
             m_buffers.insert(std::make_pair(
                 meta[0].cast<std::string>(),
-                Buffer{meta[2].cast<int>(), meta[1].cast<std::string>()}));
+                Buffer{meta[2].cast<size_t>(), meta[1].cast<std::string>()}));
         }
 
         for (auto d = output_fields.begin(); d != output_fields.end(); d++) {

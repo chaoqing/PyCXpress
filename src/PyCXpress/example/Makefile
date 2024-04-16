@@ -5,7 +5,7 @@ CC = c++
 CFLAGS = -g -Wall -std=c++17 -fPIC
 CFLAGS = -I../src/cpp
 CFLAGS += $(shell python3-config --cflags --ldflags --embed)
-CFLAGS += $(shell PYTHONPATH=../src/ python3 -m PyCXpress --includes) -I ../src/include
+CFLAGS += $(shell PYTHONPATH=../../ python3 -m PyCXpress --includes)
 
 # The build target executable
 TARGET = example.out

@@ -3,6 +3,7 @@
         "./src/python"
     ],
     "files.associations": {
-        "tuple": "cpp"
+        "tuple": "cpp",
+        "array": "cpp"
     }
 }

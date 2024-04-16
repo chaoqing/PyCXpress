@@ -3,8 +3,8 @@
 #include <iterator>
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 
-#include <PyCXpress.hpp>
-#include <Utils.hpp>
+#include <PyCXpress/core.hpp>
+#include <PyCXpress/utils.hpp>
 
 namespace pcx = PyCXpress;
 
