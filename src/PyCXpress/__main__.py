@@ -1,21 +1,21 @@
-# type: ignore[attr-defined]
 # pylint: disable=missing-function-docstring
 
 import argparse
 import sys
 import sysconfig
 
-from PyCXpress import version, get_include
 from pybind11 import get_include as pybind11_include
+
+from PyCXpress import get_include, version
 
 
 def print_includes() -> None:
-    dirs = set([
+    dirs = {
         sysconfig.get_path("include"),
         sysconfig.get_path("platinclude"),
         pybind11_include(),
         get_include(),
-    ])
+    }
 
     print(" ".join(f"-I {d}" for d in dirs))
 
@@ -38,6 +38,7 @@ def main() -> None:
         parser.print_help()
     if args.includes:
         print_includes()
+
 
 if __name__ == "__main__":
     main()

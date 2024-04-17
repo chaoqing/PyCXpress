@@ -13,19 +13,18 @@
 #include "utils.hpp"
 
 #if !defined(PYCXPRESS_EXPORT)
-#    if defined(WIN32) || defined(_WIN32)
-#        define PYCXPRESS_EXPORT __declspec(dllexport)
-#    else
-#        define PYCXPRESS_EXPORT __attribute__((visibility("default")))
-#    endif 
-#endif 
+#if defined(WIN32) || defined(_WIN32)
+#define PYCXPRESS_EXPORT __declspec(dllexport)
+#else
+#define PYCXPRESS_EXPORT __attribute__((visibility("default")))
+#endif
+#endif
 
 namespace PyCXpress {
 namespace py = pybind11;
 using namespace utils;
 
-class PYCXPRESS_EXPORT
-Buffer {
+class PYCXPRESS_EXPORT Buffer {
     typedef unsigned char Bytes;
 
     template <typename T>
@@ -116,8 +115,7 @@ private:
     py::array (*m_converter)(const std::vector<size_t> &, void *);
 };
 
-class PYCXPRESS_EXPORT
-PythonInterpreter {
+class PYCXPRESS_EXPORT PythonInterpreter {
 public:
     explicit PythonInterpreter(bool init_signal_handlers = true, int argc = 0,
                                const char *const *argv      = nullptr,

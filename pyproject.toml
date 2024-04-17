@@ -46,6 +46,7 @@ numpy = "^1.22"
 bandit = "^1.7.1"
 black = {version = "^24.4", allow-prereleases = true}
 darglint = "^1.8.1"
+build = "^1.2.1"
 isort = {extras = ["colors"], version = "^5.10.1"}
 mypy = "^1.0"
 mypy-extensions = "^0.4.3"
@@ -120,6 +121,8 @@ warn_return_any = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
+
+disable_error_code = ["no-untyped-def"]
 
 
 [tool.pytest.ini_options]

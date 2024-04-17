@@ -34,3 +34,4 @@
 # Python
 dist/
 __pycache__/
+.coverage

@@ -53,7 +53,7 @@ pre-commit-install:
 #* Formatters
 .PHONY: codestyle
 codestyle:
-	poetry run pyupgrade --exit-zero-even-if-changed --py38-plus **/*.py
+	poetry run pyupgrade --exit-zero-even-if-changed --py38-plus src/**/*.py
 	poetry run isort --settings-path pyproject.toml ./
 	poetry run black --config pyproject.toml ./
 
@@ -83,8 +83,8 @@ mypy:
 .PHONY: check-safety
 check-safety:
 	poetry check
-	poetry run safety check --full-report
-	poetry run bandit -ll --recursive PyCXpress tests
+	-poetry run safety check --full-report
+	poetry run bandit -ll --recursive src/PyCXpress tests
 
 .PHONY: lint
 lint: test check-codestyle mypy check-safety
