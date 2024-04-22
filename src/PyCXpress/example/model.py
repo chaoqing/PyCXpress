@@ -6,14 +6,10 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-import sys
-from pathlib import Path
+import os
+from contextlib import nullcontext
 
 import numpy as np
-
-sys.path.append(str(Path(__file__).parent / ".." / "src" / "python"))
-
-from contextlib import nullcontext
 
 from PyCXpress import (
     ModelAnnotationCreator,
@@ -21,7 +17,11 @@ from PyCXpress import (
     ModelRuntimeType,
     TensorMeta,
     convert_to_spec_tuple,
+    pycxpress_debugger,
 )
+
+if "PYCXPRESS_DEBUGGER_TYPE" in os.environ:
+    pycxpress_debugger(debugger=os.environ["PYCXPRESS_DEBUGGER_TYPE"])
 
 
 def show(a: np.ndarray):
@@ -92,7 +92,7 @@ def model(input: InputDataSet, output: OutputDataSet):
 
 
 def main():
-    input_data, output_data, spec = init()
+    input_data, output_data, spec, _ = init()
     print(spec)
 
     input_data.set_buffer_value("data_to_be_reshaped", np.arange(12, dtype=np.float_))

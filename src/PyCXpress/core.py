@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
+import os
 from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -14,6 +15,46 @@ import numpy as np
 from numpy.typing import DTypeLike
 
 # import tensorflow as tf
+
+
+def pycxpress_debugger(
+    host: Optional[str] = None,
+    port: Optional[int] = None,
+    debugger: Optional[str] = None,
+):
+    if debugger is None:
+        return
+
+    if host is None:
+        host = os.environ.get("PYCXPRESS_DEBUGGER_HOST", "localhost")
+
+    if port is None:
+        port = os.environ.get("PYCXPRESS_DEBUGGER_PORT", 5678)
+
+    if debugger.lower() == "pycharm":
+        try:
+            import pydevd_pycharm
+
+            pydevd_pycharm.settrace(
+                host, port=port, stdoutToServer=True, stderrToServer=True, suspend=True
+            )
+        except ConnectionRefusedError:
+            logger.warning(
+                "Can not connect to Python debug server (maybe not started?)"
+            )
+            logger.warning(
+                "Use PYCXPRESS_DEBUGGER_TYPE=debugpy instead as Pycharm professional edition is needed for Python debug server feature."
+            )
+    elif debugger.lower() == "debugpy":
+        import debugpy
+
+        debugpy.listen((host, port))
+        logger.info(f"debugpy listen on {host}:{port}, please use VSCode to attach")
+        debugpy.wait_for_client()
+    else:
+        logger.warning(
+            f"Only PYCXPRESS_DEBUGGER_TYPE=debugpy|pycharm supported but {debugger} provided"
+        )
 
 
 def get_c_type(t: DTypeLike) -> Tuple[str, int]:

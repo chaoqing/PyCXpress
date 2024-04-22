@@ -6,6 +6,7 @@ __all__ = [
     "ModelAnnotationType",
     "ModelRuntimeType",
     "convert_to_spec_tuple",
+    "pycxpress_debugger",
     "get_include",
     "version",
 ]
@@ -31,6 +32,7 @@ from .core import (
     ModelRuntimeType,
     TensorMeta,
     convert_to_spec_tuple,
+    pycxpress_debugger,
 )
 
 
