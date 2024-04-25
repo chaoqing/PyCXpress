@@ -28,12 +28,16 @@ class PYCXPRESS_EXPORT Buffer {
     typedef unsigned char Bytes;
 
     template <typename T>
-    static py::array __to_array(const std::vector<size_t> &shape, void *data) {
+    static py::array __to_array(const std::vector<size_t> &shape, void *data,
+                                size_t max_size) {
         std::vector<size_t> stride(shape.size());
         *stride.rbegin() = sizeof(T);
         auto ps          = shape.rbegin();
         for (auto pt = stride.rbegin() + 1; pt != stride.rend(); pt++, ps++) {
             *pt = *(pt - 1) * (*ps);
+        }
+        if (max_size < stride.front() * shape.front()) {
+            throw std::runtime_error("Buffer size is too small");
         }
         return py::array_t<T>{shape, std::move(stride), (T *)(data),
                               py::none()};
@@ -99,49 +103,68 @@ public:
     }
 
     void *set(const std::vector<size_t> &shape) {
-        m_array = m_converter(shape, m_data);
+        m_array = m_converter(shape, m_data, m_size);
         return m_data;
     }
 
-    py::array &get() { return m_array; }
+    inline size_t itemsize() const { return m_size / m_length; }
 
-    void reset() { m_array = m_converter({m_length}, m_data); }
+    py::array &array() { return m_array; }
+
+    void reset() { m_array = m_converter({m_length}, m_data, m_size); }
 
 private:
     size_t    m_size;
     size_t    m_length;
     Bytes    *m_data;
     py::array m_array;
-    py::array (*m_converter)(const std::vector<size_t> &, void *);
+    py::array (*m_converter)(const std::vector<size_t> &, void *, size_t);
 };
 
-class PYCXPRESS_EXPORT PythonInterpreter {
+class PYCXPRESS_EXPORT Model {
 public:
-    explicit PythonInterpreter(bool init_signal_handlers = true, int argc = 0,
-                               const char *const *argv      = nullptr,
-                               bool add_program_dir_to_path = true) {
-        initialize(init_signal_handlers, argc, argv, add_program_dir_to_path);
+    explicit Model(const std::string &path) {
+        std::vector<char> module_name(path.data(), path.data() + path.length());
+        if (module_name.empty() || module_name.back() == '.') {
+            throw std::runtime_error("No model class provided");
+        }
+        auto iter = module_name.rbegin();
+        while (iter + 1 != module_name.rend() && '.' != *iter) {
+            ++iter;
+        }
+        if (iter + 1 == module_name.rend()) {
+            throw std::runtime_error("not module provided");
+        }
+        auto ith             = std::distance(iter, module_name.rend());
+        module_name[ith - 1] = 0;
+        module_name.push_back('\0');
+        initialize(module_name.data(), module_name.data() + ith);
     }
 
-    PythonInterpreter(const PythonInterpreter &) = delete;
-    PythonInterpreter(PythonInterpreter &&other) noexcept {
-        other.is_valid = false;
-    }
-    PythonInterpreter &operator=(const PythonInterpreter &) = delete;
-    PythonInterpreter &operator=(PythonInterpreter &&)      = delete;
+    Model(const Model &)            = delete;
+    Model(Model &&)                 = delete;
+    Model &operator=(const Model &) = delete;
+    Model &operator=(Model &&)      = delete;
 
-    ~PythonInterpreter() { finalize(); }
+    ~Model() {
+        m_buffers.clear();
+        m_output_buffer_sizes.clear();
+        m_model  = py::none();
+        m_input  = py::none();
+        m_output = py::none();
+    }
+
 
     void *set_buffer(const std::string         &name,
                      const std::vector<size_t> &shape) {
         auto &buf = m_buffers[name];
         void *p   = buf.set(shape);
-        m_py_input.attr("set_buffer_value")(name, buf.get());
+        m_input.attr("set_buffer_value")(name, buf.array());
         return p;
     }
 
     std::pair<void *, std::vector<size_t>> get_buffer(const std::string &name) {
-        auto &array  = m_buffers[name].get();
+        auto &array  = m_buffers[name].array();
         auto  pShape = m_output_buffer_sizes.find(name);
         if (pShape == m_output_buffer_sizes.end()) {
             return std::make_pair(
@@ -154,11 +177,14 @@ public:
     }
 
     void run() {
-        p_pkg->attr("model")(m_py_input, m_py_output);
+        m_model.attr("run")();
+
+        auto get_buffer_shape = m_output.attr("get_buffer_shape");
+
 
         for (auto &kv : m_output_buffer_sizes) {
             kv.second.clear();
-            py::tuple shape = m_py_output.attr("get_buffer_shape")(kv.first);
+            py::tuple shape = get_buffer_shape(kv.first);
 
             for (auto &d : shape) {
                 kv.second.push_back(d.cast<size_t>());
@@ -166,45 +192,64 @@ public:
         }
     }
 
-    void show_buffer(const std::string &name) {
-        auto &buf = m_buffers[name];
-        p_pkg->attr("show")(buf.get());
-    }
-
 private:
-    void initialize(bool init_signal_handlers, int argc,
-                    const char *const *argv, bool add_program_dir_to_path) {
-        py::initialize_interpreter(true, 0, nullptr, true);
+    void initialize(const char *module, const char *name) {
+        m_model = py::module_::import(module).attr(name)();
 
-        p_pkg = std::make_unique<py::module_>(py::module_::import("model"));
-        py::print(p_pkg->attr("__file__"));
+        py::tuple spec;
+        std::tie(m_input, m_output, spec) =
+            m_model.attr("initialize")()
+                .cast<std::tuple<py::object, py::object, py::tuple>>();
 
-        py::tuple spec, output_fields;
-        std::tie(m_py_input, m_py_output, spec, output_fields) =
-            p_pkg->attr("init")()
-                .cast<
-                    std::tuple<py::object, py::object, py::tuple, py::tuple>>();
-
+        auto set_buffer_value = m_output.attr("set_buffer_value");
         for (auto d = spec.begin(); d != spec.end(); d++) {
-            auto meta = d->cast<py::tuple>();
-            m_buffers.insert(std::make_pair(
-                meta[0].cast<std::string>(),
-                Buffer{meta[2].cast<size_t>(), meta[1].cast<std::string>()}));
-        }
-
-        for (auto d = output_fields.begin(); d != output_fields.end(); d++) {
-            const auto name             = d->cast<std::string>();
-            m_output_buffer_sizes[name] = {};
-            auto &buf                   = m_buffers[name];
-            buf.reset();
-            m_py_output.attr("set_buffer_value")(name, buf.get());
+            auto       meta = d->cast<py::tuple>();
+            const auto name = meta[0].cast<std::string>();
+            auto       buf =
+                m_buffers.insert({name, Buffer{meta[2].cast<size_t>(),
+                                               meta[1].cast<std::string>()}});
+            if (meta[3].cast<bool>()) {
+                m_output_buffer_sizes[name] = {};
+                auto &buffer                = buf.first->second;
+                buffer.reset();
+                set_buffer_value(name, buffer.array());
+            }
         }
     }
 
+
+    std::map<std::string, Buffer>              m_buffers;
+    std::map<std::string, std::vector<size_t>> m_output_buffer_sizes;
+
+    py::object m_model;
+    py::object m_input;
+    py::object m_output;
+};
+
+class PYCXPRESS_EXPORT PythonInterpreter {
+public:
+    explicit PythonInterpreter() {}
+
+    PythonInterpreter(const PythonInterpreter &) = delete;
+    PythonInterpreter(PythonInterpreter &&other) noexcept {
+        other.is_valid = false;
+    }
+    PythonInterpreter &operator=(const PythonInterpreter &) = delete;
+    PythonInterpreter &operator=(PythonInterpreter &&)      = delete;
+
+    ~PythonInterpreter() { finalize(); }
+
+    void initialize(bool init_signal_handlers = true, int argc = 0,
+                    const char *const *argv                    = nullptr,
+                    bool               add_program_dir_to_path = true) {
+        // TODO: maybe explicitly `dlopen("/path/to/libpython3.x.so", RTLD_NOW |
+        // RTLD_GLOBAL)` to avoid numpy import error
+        py::initialize_interpreter(init_signal_handlers, argc, argv,
+                                   add_program_dir_to_path);
+        is_valid = true;
+    }
     void finalize() {
-        p_pkg       = nullptr;
-        m_py_input  = py::none();
-        m_py_output = py::none();
+        m_models.clear();
 
         if (is_valid) {
             py::finalize_interpreter();
@@ -212,14 +257,23 @@ private:
         }
     }
 
-    bool                         is_valid = true;
-    std::unique_ptr<py::module_> p_pkg;
+    Model &create_model(const std::string &path,
+                        const std::string &name = "default") {
+        if (!is_valid) {
+            initialize();
+        }
+        if (m_models.find(name) == m_models.end()) {
+            m_models[name] = std::make_unique<Model>(path);
+        } else {
+            std::cerr << "Warning: Model with name " << name
+                      << " already exists" << std::endl;
+        }
+        return *m_models[name].get();
+    }
 
-    std::map<std::string, Buffer>              m_buffers;
-    std::map<std::string, std::vector<size_t>> m_output_buffer_sizes;
-
-    py::object m_py_input;
-    py::object m_py_output;
+private:
+    bool                                          is_valid = false;
+    std::map<std::string, std::unique_ptr<Model>> m_models;
 };
 
 };  // namespace PyCXpress

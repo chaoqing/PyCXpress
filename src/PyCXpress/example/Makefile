@@ -1,10 +1,12 @@
 # Compiler
 CC = c++
+PYTHONPATH=../../
+LD_PRELOAD:=$(shell find_libpython)
 
 # Compiler flags
 CFLAGS = -g -Wall -std=c++17 -fPIC
 CFLAGS += $(shell python3-config --cflags --ldflags --embed)
-CFLAGS += $(shell PYTHONPATH=../../ python3 -m PyCXpress --includes)
+CFLAGS += $(shell PYTHONPATH=$(PYTHONPATH) python3 -m PyCXpress --includes)
 
 # The build target executable
 TARGET = example.out
@@ -36,7 +38,8 @@ clean:
 	rm -f $(OBJECTS) $(DEPENDS) $(TARGET)
 
 run: $(TARGET)
-	PYTHONPATH=../src/ ./$(TARGET)
+	$(info [reminding]: use LD_PRELOAD to load libpython before numpy import)
+	PYTHONPATH=$(PYTHONPATH) LD_PRELOAD=$(LD_PRELOAD) ./$(TARGET)
 
 memcheck: $(TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./$(TARGET)

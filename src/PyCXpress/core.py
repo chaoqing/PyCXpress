@@ -1,78 +1,21 @@
 # mypy: disable_error_code="type-arg,arg-type,union-attr,operator,assignment,misc"
-import logging
-
-logger = logging.getLogger(__name__)
-
-
 from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
 
-import os
 from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum, auto
+from itertools import chain
 
 import numpy as np
 from numpy.typing import DTypeLike
 
-# import tensorflow as tf
-
-
-def pycxpress_debugger(
-    host: Optional[str] = None,
-    port: Optional[int] = None,
-    debugger: Optional[str] = None,
-):
-    if debugger is None:
-        return
-
-    if host is None:
-        host = os.environ.get("PYCXPRESS_DEBUGGER_HOST", "localhost")
-
-    if port is None:
-        port = os.environ.get("PYCXPRESS_DEBUGGER_PORT", 5678)
-
-    if debugger.lower() == "pycharm":
-        try:
-            import pydevd_pycharm
-
-            pydevd_pycharm.settrace(
-                host, port=port, stdoutToServer=True, stderrToServer=True, suspend=True
-            )
-        except ConnectionRefusedError:
-            logger.warning(
-                "Can not connect to Python debug server (maybe not started?)"
-            )
-            logger.warning(
-                "Use PYCXPRESS_DEBUGGER_TYPE=debugpy instead as Pycharm professional edition is needed for Python debug server feature."
-            )
-    elif debugger.lower() == "debugpy":
-        import debugpy
-
-        debugpy.listen((host, port))
-        logger.info(f"debugpy listen on {host}:{port}, please use VSCode to attach")
-        debugpy.wait_for_client()
-    else:
-        logger.warning(
-            f"Only PYCXPRESS_DEBUGGER_TYPE=debugpy|pycharm supported but {debugger} provided"
-        )
-
-
-def get_c_type(t: DTypeLike) -> Tuple[str, int]:
-    dtype = np.dtype(t)
-    relation = {
-        np.dtype("bool"): "bool",
-        np.dtype("int8"): "int8_t",
-        np.dtype("int16"): "int16_t",
-        np.dtype("int32"): "int32_t",
-        np.dtype("int64"): "int64_t",
-        np.dtype("uint8"): "uint8_t",
-        np.dtype("uint16"): "uint16_t",
-        np.dtype("uint32"): "uint32_t",
-        np.dtype("uint64"): "uint64_t",
-        np.dtype("float32"): "float",
-        np.dtype("float64"): "double",
-    }
-    return relation.get(dtype, "char"), dtype.itemsize or 1
+from .interface import (
+    InputTensorProtocol,
+    ModelProtocol,
+    OutputTensorProtocol,
+    TensorBufferProtocol,
+)
+from .utils import get_c_type, logger
 
 
 @dataclass
@@ -162,11 +105,11 @@ class ModelAnnotationCreator(type):
 
     @staticmethod
     def general_funcs(name: str, field_names: List[str]):
-        def get_buffer_shape(self, name: str):
-            buffer = getattr(self.__buffer_data__, name)
-            return buffer.shape
+        def get_buffer_shape(self, name: str) -> Tuple[int]:
+            shape: Tuple[int] = getattr(self.__buffer_data__, name).shape
+            return shape
 
-        def set_buffer_value(self, name: str, value):
+        def set_buffer_value(self, name: str, value: np.ndarray) -> None:
             buffer = getattr(self.__buffer_data__, name)
             buffer.data = value
 
@@ -209,9 +152,20 @@ class ModelAnnotationCreator(type):
         return property(fget=get_func, fset=set_func, fdel=del_func, doc=field.doc)
 
 
-def convert_to_spec_tuple(fields: Iterable[TensorMeta]):
-    return tuple(
-        (v["name"], v["dtype"], v["buffer_size"]) for v in [v.to_dict() for v in fields]
+def convert_to_spec_tuple(
+    inputFields: Iterable[TensorMeta], outputFields: Iterable
+) -> Iterable[TensorBufferProtocol]:
+    return chain.from_iterable(
+        [
+            (
+                (v["name"], v["dtype"], v["buffer_size"], False)
+                for v in [v.to_dict() for v in inputFields]
+            ),
+            (
+                (v["name"], v["dtype"], v["buffer_size"], True)
+                for v in [v.to_dict() for v in outputFields]
+            ),
+        ]
     )
 
 

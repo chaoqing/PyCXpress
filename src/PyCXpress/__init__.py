@@ -11,7 +11,6 @@ __all__ = [
     "version",
 ]
 
-import sys
 from importlib import metadata as importlib_metadata
 from pathlib import Path
 
@@ -32,8 +31,8 @@ from .core import (
     ModelRuntimeType,
     TensorMeta,
     convert_to_spec_tuple,
-    pycxpress_debugger,
 )
+from .debugger import pycxpress_debugger
 
 
 def get_include() -> str:

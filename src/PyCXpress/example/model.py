@@ -1,4 +1,4 @@
-# mypy: disable_error_code="type-arg,attr-defined"
+# mypy: disable_error_code="arg-type,type-arg,attr-defined"
 import os
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -69,30 +69,36 @@ class OutputDataSet(
     pass
 
 
-def init():
-    return (
-        InputDataSet(),
-        OutputDataSet(),
-        tuple(
-            (
-                *convert_to_spec_tuple(InputFields.values()),
-                *convert_to_spec_tuple(OutputFields.values()),
-            )
-        ),
-        tuple(OutputFields.keys()),
-    )
+class Model:
+    def __init__(self):
+        self.input = None
+        self.output = None
 
+    def initialize(self):
+        self.input, self.output = InputDataSet(), OutputDataSet()
 
-def model(input: InputDataSet, output: OutputDataSet):
-    with nullcontext():
-        # print(input.data_to_be_reshaped)
-        # print(input.new_2d_shape)
-        output.output_a = input.data_to_be_reshaped.reshape(input.new_2d_shape)
-        # print(output.output_a)
+        return (
+            self.input,
+            self.output,
+            tuple(convert_to_spec_tuple(InputFields.values(), OutputFields.values())),
+        )
+
+    def run(self):
+        self.model(self.input, self.output)
+
+    @staticmethod
+    def model(input: InputDataSet, output: OutputDataSet):
+        with nullcontext():
+            # print(input.data_to_be_reshaped)
+            # print(input.new_2d_shape)
+            output.output_a = input.data_to_be_reshaped.reshape(input.new_2d_shape)
+            # print(output.output_a)
 
 
 def main():
-    input_data, output_data, spec, _ = init()
+
+    model = Model()
+    input_data, output_data, spec = model.initialize()
     print(spec)
 
     input_data.set_buffer_value("data_to_be_reshaped", np.arange(12, dtype=np.float_))
@@ -101,7 +107,7 @@ def main():
     print(input_data.new_2d_shape)
     output_data.set_buffer_value("output_a", np.arange(12) * 0)
 
-    model(input_data, output_data)
+    model.run()
     print(output_data.output_a)
     print(output_data.get_buffer_shape("output_a"))
 

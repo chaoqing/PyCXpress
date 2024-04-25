@@ -602,6 +602,17 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.3.2)", "diff-cover (>=8.0.1)", 
 typing = ["typing-extensions (>=4.8)"]
 
 [[package]]
+name = "find-libpython"
+version = "0.4.0"
+description = "Finds the libpython associated with your environment, wherever it may be hiding"
+optional = false
+python-versions = "*"
+files = [
+    {file = "find_libpython-0.4.0-py3-none-any.whl", hash = "sha256:034a4253bd57da3408aefc59aeac1650150f6c1f42e10fdd31615cf1df0842e3"},
+    {file = "find_libpython-0.4.0.tar.gz", hash = "sha256:46f9cdcd397ddb563b2d7592ded3796a41c1df5222443bd9d981721c906c03e6"},
+]
+
+[[package]]
 name = "identify"
 version = "2.5.36"
 description = "File identification library for Python"
@@ -1718,4 +1729,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "32d677ef3e28ddb1500c57d1c74333018f904d6feaccd0114eadef94712b1e87"
+content-hash = "8629062450c9584ff2073b754933b8e71114770d9b9247e711ed9e4180dee02a"

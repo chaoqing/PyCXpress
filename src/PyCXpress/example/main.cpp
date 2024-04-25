@@ -8,7 +8,7 @@
 
 namespace pcx = PyCXpress;
 
-void show_test(pcx::PythonInterpreter &python) {
+void show_test(pcx::Model &python) {
     std::vector<double> data(12);
     for (size_t i = 0; i < 12; i++) {
         data[i] = i;
@@ -41,11 +41,18 @@ void show_test(pcx::PythonInterpreter &python) {
 
 int main(int argc, char *argv[]) {
     auto &python     = utils::Singleton<pcx::PythonInterpreter>::Instance();
+    auto &model0     = python.create_model("model.Model");
+    auto &model1     = python.create_model("model.Model", "odd");
     int   loop_times = 3;
+
 
     while (loop_times--) {
         std::cout << "looping " << loop_times << std::endl;
-        show_test(python);
+        if (loop_times % 2 == 0) {
+            show_test(model0);
+        } else {
+            show_test(model1);
+        }
     }
 
     return 0;

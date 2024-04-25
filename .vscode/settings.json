@@ -4,6 +4,18 @@
     ],
     "files.associations": {
         "tuple": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "ostream": "cpp",
+        "type_traits": "cpp",
+        "optional": "cpp",
+        "*.tcc": "cpp",
+        "random": "cpp",
+        "fstream": "cpp",
+        "functional": "cpp",
+        "istream": "cpp",
+        "limits": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp",
+        "complex": "cpp"
     }
 }

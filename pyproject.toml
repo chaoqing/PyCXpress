@@ -5,7 +5,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "PyCXpress"
-version = "0.0.4"
+version = "0.0.5"
 description = "PyCXpress is a high-performance hybrid framework that seamlessly integrates Python and C++ to harness the flexibility of Python and the speed of C++ for efficient and expressive computation, particularly in the realm of deep learning and numerical computing."
 readme = "README.md"
 authors = ["chaoqing <chaoqingwang.nick@gmail.com>"]
@@ -63,6 +63,7 @@ pytest-cov = "^5.0.0"
 
 [tool.poetry.group.dev.dependencies]
 debugpy = "^1.8.1"
+find-libpython = "^0.4.0"
 
 [tool.black]
 # https://github.com/psf/black
