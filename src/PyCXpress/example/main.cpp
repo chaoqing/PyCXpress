@@ -8,23 +8,30 @@
 
 namespace pcx = PyCXpress;
 
-void show_test(pcx::Model &python) {
+void show_test(pcx::Model &model) {
     std::vector<double> data(12);
     for (size_t i = 0; i < 12; i++) {
         data[i] = i;
     }
 
-    std::vector<uint8_t> shape = {3, 4};
-    memcpy(python.set_buffer("data_to_be_reshaped", {12}), data.data(),
-           data.size() * sizeof(double));
-    memcpy(python.set_buffer("new_2d_shape", {2}), shape.data(),
+    std::vector<uint8_t> shape   = {3, 4};
+    void                *pBuffer = nullptr;
+    size_t               nBytes  = 0;
+    std::tie(pBuffer, nBytes) = model.set_buffer("data_to_be_reshaped", {12});
+    assert(data.size() * sizeof(double) == nBytes);
+
+    memcpy(pBuffer, data.data(), nBytes);
+    memcpy(model.set_buffer("new_2d_shape", {2}).first, shape.data(),
            shape.size() * sizeof(uint8_t));
 
-    python.run();
+    model.run();
 
+    // test retrieve output tensor
     void               *p = nullptr;
     std::vector<size_t> new_shape;
-    std::tie(p, new_shape) = python.get_buffer("output_a");
+    pcx::BufferPtr      buf;
+    std::tie(buf, new_shape) = model.get_buffer("output_a");
+    std::tie(p, nBytes)      = buf;
 
     std::cout << "output shape: ";
     std::copy(new_shape.begin(), new_shape.end(),
@@ -33,10 +40,17 @@ void show_test(pcx::Model &python) {
 
     size_t size = std::accumulate(new_shape.begin(), new_shape.end(), 1,
                                   std::multiplies<int>());
+    assert(nBytes == sizeof(double) * size);
     std::cout << "output data: ";
     std::copy((double *)p, (double *)p + size,
               std::ostream_iterator<double>(std::cout, ", "));
     std::cout << std::endl;
+
+    // test retrieve input tensor
+    std::tie(buf, new_shape) = model.get_buffer("new_2d_shape");
+    assert(new_shape.size() == 1 && new_shape.front() == shape.size());
+    assert(buf.second == shape.size() * sizeof(uint8_t));
+    assert(0 == std::memcmp(buf.first, shape.data(), buf.second));
 }
 
 int main(int argc, char *argv[]) {

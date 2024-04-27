@@ -91,7 +91,7 @@ class Model:
         with nullcontext():
             # print(input.data_to_be_reshaped)
             # print(input.new_2d_shape)
-            output.output_a = input.data_to_be_reshaped.reshape(input.new_2d_shape)
+            output.output_a = input.data_to_be_reshaped.reshape(input.new_2d_shape).T
             # print(output.output_a)
 
 

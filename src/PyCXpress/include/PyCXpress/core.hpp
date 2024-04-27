@@ -24,101 +24,106 @@ namespace PyCXpress {
 namespace py = pybind11;
 using namespace utils;
 
-class PYCXPRESS_EXPORT Buffer {
+typedef std::pair<void *, size_t> BufferPtr;
+class PYCXPRESS_EXPORT            Buffer {
     typedef unsigned char Bytes;
 
     template <typename T>
     static py::array __to_array(const std::vector<size_t> &shape, void *data,
-                                size_t max_size) {
-        std::vector<size_t> stride(shape.size());
-        *stride.rbegin() = sizeof(T);
-        auto ps          = shape.rbegin();
-        for (auto pt = stride.rbegin() + 1; pt != stride.rend(); pt++, ps++) {
-            *pt = *(pt - 1) * (*ps);
+                                           size_t &max_size) {
+                   std::vector<size_t> stride(shape.size());
+                   *stride.rbegin() = sizeof(T);
+                   auto ps          = shape.rbegin();
+                   for (auto pt = stride.rbegin() + 1; pt != stride.rend(); pt++, ps++) {
+                       *pt = *(pt - 1) * (*ps);
         }
-        if (max_size < stride.front() * shape.front()) {
-            throw std::runtime_error("Buffer size is too small");
+                   auto real_size = stride.front() * shape.front();
+                   if (max_size < real_size) {
+                       throw std::runtime_error("Buffer size is too small");
         }
-        return py::array_t<T>{shape, std::move(stride), (T *)(data),
-                              py::none()};
+                   max_size = real_size;
+                   return py::array_t<T>{shape, std::move(stride), (T *)(data),
+                                         py::none()};
     }
 
 public:
     Buffer() : m_size(0), m_data(nullptr), m_converter(nullptr) {}
     Buffer(size_t size, const std::string &data_type) : m_size(size) {
-        m_data   = new Bytes[m_size];
-        m_length = size;
+                   m_data = new Bytes[m_size];
 
-        if (data_type == "bool") {
-            m_converter = __to_array<bool>;
-            m_length /= sizeof(bool);
+                   if (data_type == "bool") {
+                       m_converter = __to_array<bool>;
+                       m_itemsize  = sizeof(bool);
         } else if (data_type == "int8_t") {
-            m_converter = __to_array<int8_t>;
-            m_length /= sizeof(int8_t);
+                       m_converter = __to_array<int8_t>;
+                       m_itemsize  = sizeof(int8_t);
         } else if (data_type == "int16_t") {
-            m_converter = __to_array<int16_t>;
-            m_length /= sizeof(int16_t);
+                       m_converter = __to_array<int16_t>;
+                       m_itemsize  = sizeof(int16_t);
         } else if (data_type == "int32_t") {
-            m_converter = __to_array<int32_t>;
-            m_length /= sizeof(int32_t);
+                       m_converter = __to_array<int32_t>;
+                       m_itemsize  = sizeof(int32_t);
         } else if (data_type == "int64_t") {
-            m_converter = __to_array<int64_t>;
-            m_length /= sizeof(int64_t);
+                       m_converter = __to_array<int64_t>;
+                       m_itemsize  = sizeof(int64_t);
         } else if (data_type == "uint8_t") {
-            m_converter = __to_array<uint8_t>;
-            m_length /= sizeof(uint8_t);
+                       m_converter = __to_array<uint8_t>;
+                       m_itemsize  = sizeof(uint8_t);
         } else if (data_type == "uint16_t") {
-            m_converter = __to_array<uint16_t>;
-            m_length /= sizeof(uint16_t);
+                       m_converter = __to_array<uint16_t>;
+                       m_itemsize  = sizeof(uint16_t);
         } else if (data_type == "uint32_t") {
-            m_converter = __to_array<uint32_t>;
-            m_length /= sizeof(uint32_t);
+                       m_converter = __to_array<uint32_t>;
+                       m_itemsize  = sizeof(uint32_t);
         } else if (data_type == "uint64_t") {
-            m_converter = __to_array<uint64_t>;
-            m_length /= sizeof(uint64_t);
+                       m_converter = __to_array<uint64_t>;
+                       m_itemsize  = sizeof(uint64_t);
         } else if (data_type == "float") {
-            m_converter = __to_array<float>;
-            m_length /= sizeof(float);
+                       m_converter = __to_array<float>;
+                       m_itemsize  = sizeof(float);
         } else if (data_type == "double") {
-            m_converter = __to_array<double>;
-            m_length /= sizeof(double);
+                       m_converter = __to_array<double>;
+                       m_itemsize  = sizeof(double);
         } else if (data_type == "char") {
-            m_converter = __to_array<char>;
-            m_length /= sizeof(char);
+                       m_converter = __to_array<char>;
+                       m_itemsize  = sizeof(char);
         } else {
-            throw NotImplementedError(data_type);
+                       throw NotImplementedError(data_type);
         }
     }
     Buffer(Buffer &&ohs)
         : m_size(ohs.m_size),
-          m_length(ohs.m_length),
+          m_itemsize(ohs.m_itemsize),
           m_data(ohs.m_data),
           m_converter(ohs.m_converter) {
-        ohs.m_data = nullptr;
+                   ohs.m_data = nullptr;
     }
 
     ~Buffer() {
-        delete[] m_data;
-        m_data = nullptr;
+                   delete[] m_data;
+                   m_data = nullptr;
     }
 
-    void *set(const std::vector<size_t> &shape) {
-        m_array = m_converter(shape, m_data, m_size);
-        return m_data;
+    BufferPtr set(const std::vector<size_t> &shape) {
+                   auto real_size = m_size;
+                   m_array        = m_converter(shape, m_data, real_size);
+                   return std::make_pair(m_data, real_size);
     }
 
-    inline size_t itemsize() const { return m_size / m_length; }
+    inline size_t itemsize() const { return m_itemsize; }
 
     py::array &array() { return m_array; }
 
-    void reset() { m_array = m_converter({m_length}, m_data, m_size); }
+    void reset() {
+                   m_array = m_converter({m_size / m_itemsize}, m_data, m_size);
+    }
 
 private:
     size_t    m_size;
-    size_t    m_length;
+    size_t    m_itemsize;
     Bytes    *m_data;
     py::array m_array;
-    py::array (*m_converter)(const std::vector<size_t> &, void *, size_t);
+    py::array (*m_converter)(const std::vector<size_t> &, void *, size_t &);
 };
 
 class PYCXPRESS_EXPORT Model {
@@ -155,25 +160,35 @@ public:
     }
 
 
-    void *set_buffer(const std::string         &name,
-                     const std::vector<size_t> &shape) {
-        auto &buf = m_buffers[name];
-        void *p   = buf.set(shape);
+    BufferPtr set_buffer(const std::string         &name,
+                         const std::vector<size_t> &shape) {
+        auto &buf  = m_buffers[name];
+        auto  pBuf = buf.set(shape);
         m_input.attr("set_buffer_value")(name, buf.array());
-        return p;
+        return pBuf;
     }
 
-    std::pair<void *, std::vector<size_t>> get_buffer(const std::string &name) {
-        auto &array  = m_buffers[name].array();
-        auto  pShape = m_output_buffer_sizes.find(name);
-        if (pShape == m_output_buffer_sizes.end()) {
-            return std::make_pair(
-                array.request().ptr,
-                std::vector<size_t>(array.shape(),
-                                    array.shape() + array.ndim()));
-        } else {
-            return std::make_pair(array.request().ptr, pShape->second);
+    std::pair<BufferPtr, std::vector<size_t>> get_buffer(
+        const std::string &name) {
+        auto &buf   = m_buffers[name];
+        auto &array = buf.array();
+
+        auto                iter = m_output_buffer_sizes.find(name);
+        std::vector<size_t> shape;
+        if (iter != m_output_buffer_sizes.end()) {
+            shape = iter->second;
+        } else {  // must be an input tensor, we do not suggest retrieve the
+                  // data from this interface
+            auto p = array.shape();
+            shape.resize(array.ndim());
+            std::copy_n(p, shape.size(), shape.begin());
         }
+
+        auto nBytes = buf.itemsize() *
+                      std::accumulate(shape.begin(), shape.end(), size_t(1),
+                                      std::multiplies<size_t>());
+        return std::make_pair(std::make_pair(array.request().ptr, nBytes),
+                              std::move(shape));
     }
 
     void run() {
