@@ -1219,6 +1219,16 @@ files = [
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
+name = "pydevd-pycharm"
+version = "241.15989.155"
+description = "PyCharm Debugger (used in PyCharm and PyDev)"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pydevd-pycharm-241.15989.155.tar.gz", hash = "sha256:428d98047ecbd7f347fb5e443869dead42aa0b389d8b64fc2034bb1cedae3609"},
+]
+
+[[package]]
 name = "pydocstyle"
 version = "6.3.0"
 description = "Python docstring style checker"
@@ -1777,4 +1787,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "24c2fa56f3b9d0d0168c74750545db4e91db279286763ab4ddb16c3c21531262"
+content-hash = "b4d4615ab071c4d01636f174604d519c811a6133595fdf6071484b5753edc8df"

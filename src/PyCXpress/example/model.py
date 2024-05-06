@@ -20,9 +20,6 @@ from PyCXpress import (
     pycxpress_debugger,
 )
 
-if "PYCXPRESS_DEBUGGER_TYPE" in os.environ:
-    pycxpress_debugger(debugger=os.environ["PYCXPRESS_DEBUGGER_TYPE"])
-
 
 def show(a: np.ndarray):
     logging.info(f"array data type: {a.dtype}")
@@ -101,6 +98,7 @@ def main():
     input_data, output_data, spec = model.initialize()
     print(spec)
 
+    pycxpress_debugger()
     input_data.set_buffer_value("data_to_be_reshaped", np.arange(12, dtype=np.float_))
     print(input_data.data_to_be_reshaped)
     input_data.set_buffer_value("new_2d_shape", np.array([3, 4]).astype(np.uint8))
