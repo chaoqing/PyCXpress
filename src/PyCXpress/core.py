@@ -79,6 +79,7 @@ class ModelAnnotationCreator(type):
         fields: Dict[str, TensorMeta],
         type: ModelAnnotationType,
         mode: ModelRuntimeType,
+        raw: bool = True,
     ):
         if type == ModelAnnotationType.Input:
             generate_property = mcs.generate_input_property
@@ -89,7 +90,7 @@ class ModelAnnotationCreator(type):
 
         for field_name, field_meta in fields.items():
             field_meta.setdefault(field_name)
-            attrs[field_name] = generate_property(field_meta)
+            attrs[field_name] = generate_property(field_meta, raw)
 
         get_buffer_shape, set_buffer_value, init_func = mcs.general_funcs(
             name, [field_meta.name for field_meta in fields.values()]
@@ -106,25 +107,27 @@ class ModelAnnotationCreator(type):
     @staticmethod
     def general_funcs(name: str, field_names: List[str]):
         def get_buffer_shape(self, name: str) -> Tuple[int]:
-            shape: Tuple[int] = getattr(self.__buffer_data__, name).shape
+            shape: Tuple[int] = self.__buffer_data__[name].shape
             return shape
 
         def set_buffer_value(self, name: str, value: np.ndarray) -> None:
-            buffer = getattr(self.__buffer_data__, name)
-            buffer.data = value
+            self.__buffer_data__[name].data = value
 
         def init_func(self):
-            _BufferData_ = namedtuple("_BufferData_", field_names)
-            self.__buffer_data__ = _BufferData_(
-                *tuple(TensorWithShape() for _ in field_names)
-            )
+            self.__buffer_data__ = {field: TensorWithShape() for field in field_names}
 
         return get_buffer_shape, set_buffer_value, init_func
 
     @staticmethod
-    def generate_input_property(field: TensorMeta):
+    def generate_input_property(field: TensorMeta, raw: bool):
         def get_func(self):
-            return getattr(self.__buffer_data__, field.name).data
+            data = self.__buffer_data__[field.name].data
+            if raw:
+                return data
+            else:
+                import tensorflow as tf
+
+                return tf.Variable(data, name=field.name)
 
         def set_func(*_):
             raise AssertionError("Not supported for input tensor")
@@ -135,16 +138,18 @@ class ModelAnnotationCreator(type):
         return property(fget=get_func, fset=set_func, fdel=del_func, doc=field.doc)
 
     @staticmethod
-    def generate_output_property(field: TensorMeta):
+    def generate_output_property(field: TensorMeta, raw: bool):
         def get_func(self):
             logger.warning(f"Only read the data field {field.name} in debugging mode")
-            buffer = getattr(self.__buffer_data__, field.name)
+            buffer = self.__buffer_data__[field.name]
             return buffer.data[: np.prod(buffer.shape)].reshape(buffer.shape)
 
         def set_func(self, data):
-            buffer = getattr(self.__buffer_data__, field.name)
+            buffer = self.__buffer_data__[field.name]
             buffer.shape = data.shape
-            buffer.data[: np.prod(data.shape)] = data.flatten()
+            len = np.prod(data.shape)
+            assert len <= buffer.data.size
+            buffer.data[:len] = (data if raw else data.numpy()).flatten()
 
         def del_func(_):
             raise AssertionError("Not supported for output tensor")

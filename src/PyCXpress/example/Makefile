@@ -1,7 +1,7 @@
 # Compiler
 CC = c++
 PYTHONPATH=../../
-LD_PRELOAD:=$(shell find_libpython)
+LD_PRELOAD:=$(shell find_libpython):/opt/conda/envs/py38/lib/libstdc++.so.6.0.29
 
 # Compiler flags
 CFLAGS = -g -Wall -std=c++17 -fPIC

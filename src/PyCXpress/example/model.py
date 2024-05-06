@@ -30,6 +30,7 @@ def show(a: np.ndarray):
 
 InputFields = dict(
     data_to_be_reshaped=TensorMeta(
+        name="input/data",
         dtype=np.float_,
         shape=(100,),
     ),
@@ -45,6 +46,7 @@ class InputDataSet(
     fields=InputFields,
     type=ModelAnnotationType.Input,
     mode=ModelRuntimeType.EagerExecution,
+    raw=False,
 ):
     pass
 
@@ -62,6 +64,7 @@ class OutputDataSet(
     fields=OutputFields,
     type=ModelAnnotationType.Output,
     mode=ModelRuntimeType.EagerExecution,
+    raw=False,
 ):
     pass
 
@@ -84,11 +87,22 @@ class Model:
         self.model(self.input, self.output)
 
     @staticmethod
-    def model(input: InputDataSet, output: OutputDataSet):
+    def model(input: InputDataSet, output: OutputDataSet, use_tensorflow: bool = True):
         with nullcontext():
             # print(input.data_to_be_reshaped)
             # print(input.new_2d_shape)
-            output.output_a = input.data_to_be_reshaped.reshape(input.new_2d_shape).T
+            if use_tensorflow:
+                import tensorflow as tf
+
+                output.output_a = tf.transpose(
+                    tf.reshape(
+                        input.data_to_be_reshaped, tf.cast(input.new_2d_shape, tf.int32)
+                    )
+                )
+            else:
+                output.output_a = input.data_to_be_reshaped.reshape(
+                    input.new_2d_shape
+                ).T
             # print(output.output_a)
 
 
@@ -98,8 +112,7 @@ def main():
     input_data, output_data, spec = model.initialize()
     print(spec)
 
-    pycxpress_debugger()
-    input_data.set_buffer_value("data_to_be_reshaped", np.arange(12, dtype=np.float_))
+    input_data.set_buffer_value("input/data", np.arange(12, dtype=np.float_))
     print(input_data.data_to_be_reshaped)
     input_data.set_buffer_value("new_2d_shape", np.array([3, 4]).astype(np.uint8))
     print(input_data.new_2d_shape)
@@ -108,6 +121,8 @@ def main():
     model.run()
     print(output_data.output_a)
     print(output_data.get_buffer_shape("output_a"))
+
+    # pycxpress_debugger()
 
 
 if __name__ == "__main__":

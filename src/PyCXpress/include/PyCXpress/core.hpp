@@ -162,7 +162,7 @@ public:
 
     BufferPtr set_buffer(const std::string         &name,
                          const std::vector<size_t> &shape) {
-        auto &buf  = m_buffers[name];
+        auto &buf  = m_buffers.at(name);
         auto  pBuf = buf.set(shape);
         m_input.attr("set_buffer_value")(name, buf.array());
         return pBuf;
@@ -170,7 +170,7 @@ public:
 
     std::pair<BufferPtr, std::vector<size_t>> get_buffer(
         const std::string &name) {
-        auto &buf   = m_buffers[name];
+        auto &buf   = m_buffers.at(name);
         auto &array = buf.array();
 
         auto                iter = m_output_buffer_sizes.find(name);

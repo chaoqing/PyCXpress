@@ -17,7 +17,7 @@ void show_test(pcx::Model &model) {
     std::vector<uint8_t> shape   = {3, 4};
     void                *pBuffer = nullptr;
     size_t               nBytes  = 0;
-    std::tie(pBuffer, nBytes) = model.set_buffer("data_to_be_reshaped", {12});
+    std::tie(pBuffer, nBytes)    = model.set_buffer("input/data", {12});
     assert(data.size() * sizeof(double) == nBytes);
 
     memcpy(pBuffer, data.data(), nBytes);
