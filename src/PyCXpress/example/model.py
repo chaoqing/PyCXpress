@@ -19,6 +19,7 @@ from PyCXpress import (
     convert_to_spec_tuple,
     pycxpress_debugger,
 )
+from PyCXpress.utils import getenv
 
 
 def show(a: np.ndarray):
@@ -76,6 +77,7 @@ class Model:
 
     def initialize(self):
         self.input, self.output = InputDataSet(), OutputDataSet()
+        print("current status: ", getenv("PYCXPRESS_STATUS", ""))
 
         return (
             self.input,
@@ -84,6 +86,7 @@ class Model:
         )
 
     def run(self):
+        print("current status: ", getenv("PYCXPRESS_STATUS", ""))
         self.model(self.input, self.output)
 
     @staticmethod

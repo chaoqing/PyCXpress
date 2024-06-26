@@ -24,6 +24,8 @@ void show_test(pcx::Model &model) {
     memcpy(model.set_buffer("new_2d_shape", {2}).first, shape.data(),
            shape.size() * sizeof(uint8_t));
 
+    std::string status = "model ready to run";
+    setenv("PYCXPRESS_STATUS", status.c_str(), 1);
     model.run();
 
     // test retrieve output tensor
@@ -54,11 +56,13 @@ void show_test(pcx::Model &model) {
 }
 
 int main(int argc, char *argv[]) {
-    auto &python     = utils::Singleton<pcx::PythonInterpreter>::Instance();
+    auto &python = utils::Singleton<pcx::PythonInterpreter>::Instance();
+
+    std::string status = "model ready to initialized.";
+    setenv("PYCXPRESS_STATUS", status.c_str(), 1);
     auto &model0     = python.create_model("model.Model");
     auto &model1     = python.create_model("model.Model", "odd");
     int   loop_times = 3;
-
 
     while (loop_times--) {
         std::cout << "looping " << loop_times << std::endl;
