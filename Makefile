@@ -18,10 +18,16 @@ define message
 @echo $(1)
 endef
 
+#* Quick commands
+.PHONY: example
+example: 
+	env -C $(REPO_DIR)/src/PyCXpress/example poetry run make run
+
 #* Poetry
 .PHONY: poetry-download
 poetry-download:
 	curl -sSL https://install.python-poetry.org | $(PYTHON) -
+	~/.local/share/pypoetry/venv/bin/pip install poetry-plugin-export
 
 .PHONY: poetry-remove
 poetry-remove:
@@ -30,8 +36,10 @@ poetry-remove:
 #* Installation
 .PHONY: install
 install:
-	poetry lock -n && poetry export --without-hashes > requirements.txt
-	poetry install -n
+	poetry lock --no-update -n 
+	poetry export --without-hashes > requirements.txt
+	poetry export -E tensorflow --without-hashes > requirements.tensorflow.txt
+	env POETRY_VIRTUALENVS_IN_PROJECT=true poetry install -n --extras tensorflow
 	-poetry run mypy --install-types --non-interactive ./
 
 .PHONY: install-conda-deps install-conda-deps-manually

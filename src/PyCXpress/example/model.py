@@ -6,10 +6,17 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-import os
+import sys
 from contextlib import nullcontext
 
 import numpy as np
+try:
+    import tensorflow as tf
+    logging.info(f"tensorflow found: {tf.version.VERSION}")
+except ImportError:
+    tf = None
+    logging.warn(f"tensorflow not found inside {sys.path}")
+
 
 from PyCXpress import (
     ModelAnnotationCreator,
@@ -47,7 +54,7 @@ class InputDataSet(
     fields=InputFields,
     type=ModelAnnotationType.Input,
     mode=ModelRuntimeType.EagerExecution,
-    raw=False,
+    raw=tf is None,
 ):
     pass
 
@@ -65,7 +72,7 @@ class OutputDataSet(
     fields=OutputFields,
     type=ModelAnnotationType.Output,
     mode=ModelRuntimeType.EagerExecution,
-    raw=False,
+    raw=tf is None,
 ):
     pass
 
@@ -87,7 +94,7 @@ class Model:
 
     def run(self):
         print("current status: ", getenv("PYCXPRESS_STATUS", ""))
-        self.model(self.input, self.output)
+        self.model(self.input, self.output, use_tensorflow=tf is not None)
 
     @staticmethod
     def model(input: InputDataSet, output: OutputDataSet, use_tensorflow: bool = True):
@@ -95,8 +102,7 @@ class Model:
             # print(input.data_to_be_reshaped)
             # print(input.new_2d_shape)
             if use_tensorflow:
-                import tensorflow as tf
-
+                assert tf is not None
                 output.output_a = tf.transpose(
                     tf.reshape(
                         input.data_to_be_reshaped, tf.cast(input.new_2d_shape, tf.int32)

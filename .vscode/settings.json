@@ -16,6 +16,8 @@
         "limits": "cpp",
         "sstream": "cpp",
         "streambuf": "cpp",
-        "complex": "cpp"
-    }
+        "complex": "cpp",
+        "stdexcept": "cpp"
+    },
+    "debugpy.showPythonInlineValues": true
 }

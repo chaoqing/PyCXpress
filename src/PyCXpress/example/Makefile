@@ -1,12 +1,13 @@
 # Compiler
+SHELL_PREFIX=poetry run
 CC = c++
 PYTHONPATH=../../
-LD_PRELOAD:=$(shell find_libpython):/opt/conda/envs/py38/lib/libstdc++.so.6.0.29
+LD_PRELOAD:=$(shell $(SHELL_PREFIX) find_libpython):
 
 # Compiler flags
 CFLAGS = -g -Wall -std=c++17 -fPIC
-CFLAGS += $(shell python3-config --cflags --ldflags --embed)
-CFLAGS += $(shell PYTHONPATH=$(PYTHONPATH) python3 -m PyCXpress --includes)
+CFLAGS += $(shell $(SHELL_PREFIX) python3-config --cflags --ldflags --embed)
+CFLAGS += $(shell PYTHONPATH=$(PYTHONPATH) $(SHELL_PREFIX) python3 -m PyCXpress --includes)
 
 # The build target executable
 TARGET = example.out
