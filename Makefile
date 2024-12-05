@@ -15,9 +15,10 @@ ifeq ($(CPM_SOURCE_CACHE),)
   CPM_SOURCE_CACHE := $(THIRD_PARTY_DIR)
 endif
 
-PYTHON := poetry run python3
+POETRY := POETRY_VIRTUALENVS_IN_PROJECT=true poetry
+PYTHON := $(POETRY) run python3
 PYTHONPATH := $(REPO_DIR)/src
-CMAKE := env CPM_SOURCE_CACHE=$(CPM_SOURCE_CACHE) PATH=$(REPO_DIR)/.venv/bin:$(PATH) CC=clang CXX=clang++ cmake
+CMAKE := CPM_SOURCE_CACHE=$(CPM_SOURCE_CACHE) PATH=$(REPO_DIR)/.venv/bin:$(PATH) CC=clang CXX=clang++ cmake
 
 #*****************************************#
 #*               UTILITIES               *#
@@ -35,7 +36,7 @@ endef
 #*****************************************#
 .PHONY: example example-pycxpress example-tensorflow
 example-pycxpress:
-	env -C $(REPO_DIR)/src/PyCXpress/example poetry run make run
+	env -C $(REPO_DIR)/src/PyCXpress/example $(POETRY) run make run
 
 example-tensorflow:
 	$(call message, Not implemented)
@@ -128,11 +129,11 @@ poetry-remove:
 #* Installation
 .PHONY: install
 install:
-	poetry lock --no-update -n
-	poetry export --without-hashes > requirements.txt
-	poetry export -E tensorflow --without-hashes > requirements.tensorflow.txt
-	env POETRY_VIRTUALENVS_IN_PROJECT=true poetry install -n --extras tensorflow
-	-poetry run mypy --install-types --non-interactive ./
+	$(POETRY) lock --no-update -n
+	$(POETRY) export --without-hashes > requirements.txt
+	$(POETRY) export -E tensorflow --without-hashes > requirements.tensorflow.txt
+	$(POETRY) install -n --extras tensorflow
+	-$(POETRY) run mypy --install-types --non-interactive ./
 
 .PHONY: install-conda-deps install-conda-deps-manually
 install-conda-deps:
@@ -148,14 +149,14 @@ install-conda-deps-manually:
 
 .PHONY: pre-commit-install
 pre-commit-install:
-	poetry run pre-commit install
+	$(POETRY) run pre-commit install
 
 #* Formatters
 .PHONY: codestyle
 codestyle:
-	poetry run pyupgrade --exit-zero-even-if-changed --py38-plus sample/*.py src/**/*.py tests/**/*.py
-	poetry run isort --settings-path pyproject.toml src sample tests
-	poetry run black --config pyproject.toml --extend-exclude third_party ./
+	$(POETRY) run pyupgrade --exit-zero-even-if-changed --py38-plus sample/*.py src/**/*.py tests/**/*.py
+	$(POETRY) run isort --settings-path pyproject.toml src sample tests
+	$(POETRY) run black --config pyproject.toml --extend-exclude third_party ./
 
 .PHONY: formatting
 formatting: codestyle format-cpp format-cmake
@@ -176,8 +177,8 @@ format-cmake:
 #* Linting
 .PHONY: test test-pycxpress test-tfcpy
 test-pycxpress:
-	PYTHONPATH=$(PYTHONPATH) poetry run pytest -c pyproject.toml --cov-report=html --cov=PyCXpress tests/
-	poetry run coverage-badge -o assets/images/coverage.svg -f
+	PYTHONPATH=$(PYTHONPATH) $(POETRY) run pytest -c pyproject.toml --cov-report=html --cov=PyCXpress tests/
+	$(POETRY) run coverage-badge -o assets/images/coverage.svg -f
 
 test-tfcpy:
 	$(call message, Source)
@@ -191,27 +192,27 @@ test: test-pycxpress test-tfcpy
 
 .PHONY: check-codestyle
 check-codestyle:
-	poetry run isort --diff --check-only --settings-path pyproject.toml src sample tests
-	poetry run black --diff --check --config pyproject.toml --extend-exclude third_party ./
-	poetry run darglint --verbosity 2 src sample tests
+	$(POETRY) run isort --diff --check-only --settings-path pyproject.toml src sample tests
+	$(POETRY) run black --diff --check --config pyproject.toml --extend-exclude third_party ./
+	$(POETRY) run darglint --verbosity 2 src sample tests
 
 .PHONY: mypy
 mypy:
-	poetry run mypy --config-file pyproject.toml ./
+	$(POETRY) run mypy --config-file pyproject.toml ./
 
 .PHONY: check-safety
 check-safety:
-	poetry check
-	-poetry run safety check --full-report
-	poetry run bandit -ll --recursive src/PyCXpress tests
+	$(POETRY) check
+	-$(POETRY) run safety check --full-report
+	$(POETRY) run bandit -ll --recursive src/PyCXpress tests
 
 .PHONY: lint
 lint: test check-codestyle mypy check-safety
 
 .PHONY: update-dev-deps
 update-dev-deps:
-	poetry add -D bandit@latest darglint@latest "isort[colors]@latest" mypy@latest pre-commit@latest pydocstyle@latest pylint@latest pytest@latest pyupgrade@latest safety@latest coverage@latest coverage-badge@latest pytest-html@latest pytest-cov@latest
-	poetry add -D --allow-prereleases black@latest
+	$(POETRY) add -D bandit@latest darglint@latest "isort[colors]@latest" mypy@latest pre-commit@latest pydocstyle@latest pylint@latest pytest@latest pyupgrade@latest safety@latest coverage@latest coverage-badge@latest pytest-html@latest pytest-cov@latest
+	$(POETRY) add -D --allow-prereleases black@latest
 
 #* Cleaning
 .PHONY: pycache-remove
