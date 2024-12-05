@@ -10,8 +10,10 @@ import sys
 from contextlib import nullcontext
 
 import numpy as np
+
 try:
     import tensorflow as tf
+
     logging.info(f"tensorflow found: {tf.version.VERSION}")
 except ImportError:
     tf = None

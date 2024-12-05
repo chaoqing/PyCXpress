@@ -17,6 +17,57 @@ PyCXpress is a high-performance hybrid framework that seamlessly integrates Pyth
 
 </div>
 
+## 🛡 Developer
+
+Use following `Makefile` to install the dependencies.
+```
+WGET := wget --no-verbose
+
+install-environment: install-tensorflow install-pytorch install-clang install-cmake install-tools
+
+install-tools:
+	command -v doxygen || sudo apt install doxygen
+
+TENSORFLOW_VERSION := 2.10.1
+TENSORFLOW_DEB := libtensorflow-cc_$(TENSORFLOW_VERSION)-gpu_$(shell dpkg --print-architecture).deb
+install-tensorflow:
+	[ -f $(THIRD_PARTY_DIR)/$(TENSORFLOW_DEB) ] || $(WGET) -O $(THIRD_PARTY_DIR)/$(TENSORFLOW_DEB) "https://github.com/ika-rwth-aachen/libtensorflow_cc/releases/download/v$(TENSORFLOW_VERSION)/$(TENSORFLOW_DEB)"
+	$(call message, "sudo dpkg -i $(THIRD_PARTY_DIR)/$(TENSORFLOW_DEB) && sudo ldconfig")
+	rm -rf $(THIRD_PARTY_DIR)/libtensorflow_cc && mkdir -p $(THIRD_PARTY_DIR)/libtensorflow_cc
+	ar -p $(THIRD_PARTY_DIR)/$(TENSORFLOW_DEB) data.tar.xz | tar --xz -xf - --strip-components=3 -C $(THIRD_PARTY_DIR)/libtensorflow_cc
+	mkdir -p $(THIRD_PARTY_DIR)/libtensorflow_cc/include/tensorflow/third_party/gpus && ln -sfn /usr/local/cuda $(THIRD_PARTY_DIR)/libtensorflow_cc/include/tensorflow/third_party/gpus/
+	$(call message, Install dependency if needed with APT "sudo apt install libcudart11.0 libcublas11 libcufft10 libcusparse11")
+	$(call message, Install dependency from JetPack6.0 APT repo "https://repo.download.nvidia.com/jetson/common/pool/main/c/cudnn/libcudnn8_8.9.4.25-1+cuda12.2_arm64.deb")
+	$(call message, Install tensorflow python for Jetson with "wget 'https://developer.download.nvidia.com/compute/redist/jp/v61/tensorflow/tensorflow-2.16.1%2Bnv24.08-cp310-cp310-linux_aarch64.whl'")
+	$(call message, And then pip install with "python -m pip install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v61 tensorflow-2.16.1+nv24.08-cp310-cp310-linux_aarch64.whl")
+
+
+install-pytorch:
+	[ -f $(THIRD_PARTY_DIR)/libtorch.zip ] || $(WGET) -O $(THIRD_PARTY_DIR)/libtorch.zip "https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip"
+	rm -rf $(THIRD_PARTY_DIR)/libtorch && mkdir -p $(THIRD_PARTY_DIR)/libtorch
+	env -C $(THIRD_PARTY_DIR) unzip $(THIRD_PARTY_DIR)/libtorch.zip
+
+LLVM_APT_URL := $(shell . /etc/os-release && echo "http://apt.llvm.org/$${VERSION_CODENAME}/ llvm-toolchain-$${VERSION_CODENAME}")
+LLVM_VERSION := 20
+install-clang:
+	sudo apt-get -y purge --auto-remove clang*
+	$(call message,Deprecation Warnning)
+	$(call message,    "$(WGET) -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -")
+	$(WGET) -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/llvm-snapshot.asc
+	printf "deb $(LLVM_APT_URL)%s main\n" "" "-18" "-19" | sudo tee /etc/apt/sources.list.d/llvm.list
+	sudo apt-get update
+	DEBIAN_FRONTEND=noninteractive sudo apt-get -y install --no-install-recommends clang-$(LLVM_VERSION) clangd-$(LLVM_VERSION) clang-format-$(LLVM_VERSION) clang-tidy-$(LLVM_VERSION) libclang-rt-$(LLVM_VERSION)-dev
+	sudo ln -sfn $$(command -v clang-$(LLVM_VERSION)) /usr/bin/clang
+	sudo ln -sfn $$(command -v clangd-$(LLVM_VERSION)) /usr/bin/clangd
+	sudo ln -sfn $$(command -v clang++-$(LLVM_VERSION)) /usr/bin/clang++
+	sudo ln -sfn $$(command -v clang-format-$(LLVM_VERSION)) /usr/bin/clang-format
+	sudo ln -sfn $$(command -v clang-tidy-$(LLVM_VERSION)) /usr/bin/clang-tidy
+
+install-cmake:
+	chmod +x $(THIS_MAKEFILE_DIR)/.devcontainer/reinstall-cmake.sh
+	sudo $(THIS_MAKEFILE_DIR)/.devcontainer/reinstall-cmake.sh 3.22.2
+```
+
 ## 🛡 License
 
 [![License](https://img.shields.io/github/license/chaoqing/PyCXpress)](https://github.com/chaoqing/PyCXpress/blob/master/LICENSE)

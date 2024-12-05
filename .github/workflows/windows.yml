@@ -1,0 +1,39 @@
+name: Windows
+
+on: workflow_dispatch
+#on:
+#  push:
+#    branches:
+#      - master
+#      - main
+#  pull_request:
+#    branches:
+#      - master
+#      - main
+
+env:
+  CTEST_OUTPUT_ON_FAILURE: 1
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/third_party
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: "**/third_party"
+          key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+
+      - name: configure
+        run: cmake -Stest -Bbuild
+
+      - name: build
+        run: cmake --build build --config Debug -j4
+
+      - name: test
+        run: |
+          cd build
+          ctest --build-config Debug

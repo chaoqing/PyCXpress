@@ -35,6 +35,11 @@
 dist/
 __pycache__/
 .coverage
+.venv
 
 # IDE
 .idea/
+
+# Generated
+build/
+.cache/

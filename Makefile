@@ -1,27 +1,119 @@
-#* Variables
+.DEFAULT_GOAL := build
+
+#*****************************************#
+#*               VARIABLES               *#
+#*****************************************#
 SHELL := /usr/bin/env bash
 
 THIS_MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
-REPO_DIR := $(patsubst %/,%,$(dir $(THIS_MAKEFILE)))
+THIS_MAKEFILE_DIR := $(patsubst %/,%,$(dir $(THIS_MAKEFILE)))
+REPO_DIR := $(THIS_MAKEFILE_DIR)
 REPO_PREFIX := ../$(notdir $(abspath $(REPO_DIR)))
 
-PYTHON := python3
+THIRD_PARTY_DIR := $(realpath $(REPO_DIR)/third_party)
+ifeq ($(CPM_SOURCE_CACHE),)
+  CPM_SOURCE_CACHE := $(THIRD_PARTY_DIR)
+endif
+
+PYTHON := poetry run python3
 PYTHONPATH := $(REPO_DIR)/src
+CMAKE := env CPM_SOURCE_CACHE=$(CPM_SOURCE_CACHE) PATH=$(REPO_DIR)/.venv/bin:$(PATH) CC=clang CXX=clang++ cmake
 
-CXX_SOURCES = $(shell find $(REPO_DIR) -name '*.cpp' -o -name '*.cxx' -o -name '*.cc' -o -name '*.c++' -o -name '*.hpp' -o -name '*.h')
-
+#*****************************************#
+#*               UTILITIES               *#
+#*****************************************#
 #* Makefile debugging
 print-%: ; @$(warning $* is $($*) ($(value $*)) (from $(origin $*)))
-
 define message
 @echo -n "make[top]: "
 @echo $(1)
 endef
 
-#* Quick commands
-.PHONY: example
-example: 
+
+#*****************************************#
+#*             QUICK COMMANDS            *#
+#*****************************************#
+.PHONY: example example-pycxpress example-tensorflow
+example-pycxpress:
 	env -C $(REPO_DIR)/src/PyCXpress/example poetry run make run
+
+example-tensorflow:
+	$(call message, Not implemented)
+
+example: example-pycxpress example-tensorflow
+
+#*****************************************#
+#*                OPTIONS                *#
+#*****************************************#
+
+CMAKE_OPTIONS :=
+
+ifeq ($(CMAKE_PREFIX_PATH),)
+	CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
+endif
+
+ifneq ($(TYPE),)
+  BUILD_TYPE_R := Release
+  BUILD_TYPE_D := Debug
+  BUILD_TYPE_RD := RelWithDebInfo
+  BUILD_TYPE_MR := MinSizeRel
+
+  CMAKE_OPTIONS += -DCMAKE_BUILD_TYPE=$(BUILD_TYPE_$(TYPE))
+endif
+
+ifneq ($(COVERAGE),)
+  CODE_COVERAGE_OPTIONS := 0 1
+  CMAKE_OPTIONS += -DENABLE_TEST_COVERAGE=$(COVERAGE)
+endif
+
+EMPTY :=
+ifneq ($(SANITIZER),)
+  SANITIZER_OPTIONS := Address Memory MemoryWithOrigins Undefined Thread Leak
+  CMAKE_OPTIONS += -DUSE_SANITIZER=$(subst $(empty) $(empty),;,$(SANITIZER))
+endif
+
+ifneq ($(STATIC_CHECK),)
+  STATIC_CHECK_OPTIONS := clang-tidy iwyu cppcheck
+  CMAKE_OPTIONS += $(foreach TYPE,$(STATIC_CHECK),-DUSE_STATIC_ANALYZER=$(TYPE))
+endif
+
+ifneq ($(CCACHE),)
+  CCACHE_OPTIONS := ON OFF
+  CMAKE_OPTIONS += -DUSE_CCACHE=$(CCACHE)
+endif
+
+
+#*****************************************#
+#*                ACTIONS                *#
+#*****************************************#
+
+source-all: FORCE
+	$(call message, Clean)
+	rm -rf build
+	$(call message, Source)
+	$(CMAKE) -B build $(CMAKE_OPTIONS)
+
+source: FORCE
+	$(call message, Source)
+	$(CMAKE) -S sample -B build/sample $(CMAKE_OPTIONS)
+
+build: FORCE
+	$(call message, Build)
+	$(CMAKE) --build build/sample
+
+graph: ./sample/main.py
+	env -C $(THIS_MAKEFILE_DIR)/sample $(PYTHON) main.py
+
+run: build graph
+	$(call message, Run ./build/sample/sample)
+	@env TF_CPP_MIN_LOG_LEVEL=2 $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- ./sample/models/saved_model/
+
+doc: FORCE
+	$(call message, Source)
+	$(CMAKE) -S doc -B build/doc $(CMAKE_OPTIONS)
+	$(call message, GenerateDocs)
+	$(CMAKE) --build build/doc --target GenerateDocs
+
 
 #* Poetry
 .PHONY: poetry-download
@@ -36,7 +128,7 @@ poetry-remove:
 #* Installation
 .PHONY: install
 install:
-	poetry lock --no-update -n 
+	poetry lock --no-update -n
 	poetry export --without-hashes > requirements.txt
 	poetry export -E tensorflow --without-hashes > requirements.tensorflow.txt
 	env POETRY_VIRTUALENVS_IN_PROJECT=true poetry install -n --extras tensorflow
@@ -50,7 +142,7 @@ install-conda-deps-manually:
 	conda create -n py38 python=3.8.10
 	conda activate py38
 	python3 -m pip install --upgrade pip
-	python3 -m pip install pybind11 
+	python3 -m pip install pybind11
 	python3 -m pip install tensorflow==2.10.1
 	conda env export | tee conda.yaml
 
@@ -61,28 +153,47 @@ pre-commit-install:
 #* Formatters
 .PHONY: codestyle
 codestyle:
-	poetry run pyupgrade --exit-zero-even-if-changed --py38-plus src/**/*.py
-	poetry run isort --settings-path pyproject.toml ./
-	poetry run black --config pyproject.toml ./
+	poetry run pyupgrade --exit-zero-even-if-changed --py38-plus sample/*.py src/**/*.py tests/**/*.py
+	poetry run isort --settings-path pyproject.toml src sample tests
+	poetry run black --config pyproject.toml --extend-exclude third_party ./
 
 .PHONY: formatting
-formatting: codestyle format-cpp
+formatting: codestyle format-cpp format-cmake
 
 .PHONY: format-cpp
+EXTRA_CXX_SOURCES += $(shell find $(REPO_DIR)/src/PyCXpress -name '*.cpp' -o -name '*.cxx' -o -name '*.cc' -o -name '*.c++' -o -name '*.hpp' -o -name '*.h')
 format-cpp:
-	clang-format -i -style=file $(CXX_SOURCES)
+	clang-format -i -style=file $(EXTRA_CXX_SOURCES)
+
+.PHONY: format-cmake
+#[Format.$(CMAKE)](https://github.com/TheLartians/Format.cmake)
+format-cmake:
+	$(call message, Source CMAKE)
+	$(CMAKE) -S tests -B build/tests $(CMAKE_OPTIONS)
+	$(call message, Format)
+	$(CMAKE) --build build --target fix-format
 
 #* Linting
-.PHONY: test
-test:
+.PHONY: test test-pycxpress test-tfcpy
+test-pycxpress:
 	PYTHONPATH=$(PYTHONPATH) poetry run pytest -c pyproject.toml --cov-report=html --cov=PyCXpress tests/
 	poetry run coverage-badge -o assets/images/coverage.svg -f
 
+test-tfcpy:
+	$(call message, Source)
+	$(CMAKE) -S tests -B build/tests $(CMAKE_OPTIONS)
+	$(call message, Build)
+	$(CMAKE) --build build/tests
+	$(call message, Run ./build/tests/TensorflowCpyTests for test)
+	CTEST_OUTPUT_ON_FAILURE=1 $(CMAKE) --build build/tests --target test
+
+test: test-pycxpress test-tfcpy
+
 .PHONY: check-codestyle
 check-codestyle:
-	poetry run isort --diff --check-only --settings-path pyproject.toml ./
-	poetry run black --diff --check --config pyproject.toml ./
-	poetry run darglint --verbosity 2 PyCXpress tests
+	poetry run isort --diff --check-only --settings-path pyproject.toml src sample tests
+	poetry run black --diff --check --config pyproject.toml --extend-exclude third_party ./
+	poetry run darglint --verbosity 2 src sample tests
 
 .PHONY: mypy
 mypy:
@@ -133,3 +244,5 @@ build-remove:
 
 .PHONY: cleanup
 cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove
+
+FORCE:

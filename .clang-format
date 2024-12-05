@@ -45,3 +45,15 @@ MaxEmptyLinesToKeep: 2
 
 # Indent access modifiers to align with class/struct members.
 AccessModifierOffset: -4
+
+# Extra
+AllowAllParametersOfDeclarationOnNextLine: 'false'
+AlwaysBreakTemplateDeclarations: 'No'
+BreakBeforeBraces: Attach
+ColumnLimit: '100'
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'true'
+IncludeBlocks: Regroup
+IndentPPDirectives: AfterHash
+NamespaceIndentation: All
+BreakBeforeBinaryOperators: All
+BreakBeforeTernaryOperators: 'true'

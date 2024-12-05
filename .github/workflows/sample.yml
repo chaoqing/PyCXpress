@@ -1,0 +1,38 @@
+name: Sample
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
+      - main
+
+env:
+  CPM_SOURCE_CACHE: ${{ github.workspace }}/third_party
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/cache@v3
+        with:
+          path: "**/third_party"
+          key: ${{ github.workflow }}-cpm-modules-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+      
+      - name: dependency
+        run: make install-tensorflow
+
+      - name: configure
+        run: cmake -Ssample -Bbuild -DCMAKE_BUILD_TYPE=Debug
+
+      - name: build
+        run: cmake --build build -j4
+
+      - name: run
+        run: ./build/sample

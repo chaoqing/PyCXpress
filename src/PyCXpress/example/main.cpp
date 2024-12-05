@@ -36,16 +36,13 @@ void show_test(pcx::Model &model) {
     std::tie(p, nBytes)      = buf;
 
     std::cout << "output shape: ";
-    std::copy(new_shape.begin(), new_shape.end(),
-              std::ostream_iterator<size_t>(std::cout, ", "));
+    std::copy(new_shape.begin(), new_shape.end(), std::ostream_iterator<size_t>(std::cout, ", "));
     std::cout << std::endl;
 
-    size_t size = std::accumulate(new_shape.begin(), new_shape.end(), 1,
-                                  std::multiplies<int>());
+    size_t size = std::accumulate(new_shape.begin(), new_shape.end(), 1, std::multiplies<int>());
     assert(nBytes == sizeof(double) * size);
     std::cout << "output data: ";
-    std::copy((double *)p, (double *)p + size,
-              std::ostream_iterator<double>(std::cout, ", "));
+    std::copy((double *)p, (double *)p + size, std::ostream_iterator<double>(std::cout, ", "));
     std::cout << std::endl;
 
     // test retrieve input tensor

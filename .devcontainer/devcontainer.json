@@ -1,0 +1,90 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/cpp
+{
+	"name": "C++/CUDA",
+	//
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			// NVIDIA only provide apt support for 20.04
+			"IMAGE_VARIANT": "ubuntu-20.04",
+			"TENSORFLOW_VERSION": "2.10.1",
+			"REINSTALL_CMAKE_VERSION_FROM_SOURCE": "3.22.2"
+		}
+	},
+	//
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/nvidia-cuda:1": {
+			"cudaVersion": "11.8",
+			"cudnnVersion": "8.7.0.84",
+			"installCudnn": true,
+			"installCudnnDev": true,
+			"installNvtx": false,
+			"installToolkit": true
+		},
+		// "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		// "ghcr.io/devcontainers/features/desktop-lite:1": {
+		// 	"password": "noPassword",
+		// 	"webPort": "6080",
+		// 	"vncPort": "5901"
+		// },
+		// "ghcr.io/devcontainers/features/anaconda:1": {},
+		"ghcr.io/devcontainers/features/conda:1": {
+			"addCondaForge": true
+		},
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"configureZshAsDefaultShell": true
+		}
+	},
+	//
+	//
+	"hostRequirements": {
+		"gpu": "optional"
+	},
+	//
+	//
+	"capAdd": [
+		"SYS_PTRACE"
+	],
+	//
+	// Avoid Desktop crash
+	// "runArgs": ["--shm-size=1g"],
+	//
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [
+	// 	6080,
+	// 	5901
+	// ],
+	// "portsAttributes": {
+	// 	"6080": {
+	// 		"label": "WebDT"
+	// 	},
+	// 	"5901": {
+	// 		"label": "VNCDT"
+	// 	}
+	// },
+	//
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "python -m pip install cmake_format==0.6.11 pyyaml jinja2 Pygments",
+	//
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode-remote.remote-containers",
+				"mhutchie.git-graph",
+				"ms-vscode.cpptools",
+				"ms-vscode.cpptools-extension-pack",
+				"ms-vscode.makefile-tools",
+				"ms-vscode.cmake-tools",
+				"ms-python.python",
+				"ms-python.debugpy",
+				"vscodevim.vim"
+			]
+		}
+	}
+	//
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
