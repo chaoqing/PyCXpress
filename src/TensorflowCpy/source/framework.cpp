@@ -1,8 +1,8 @@
-#include "tensorflow_cpy/framework.h"
+#include <tensorflow_cpy/framework.h>
 
 #include <filesystem>
 #include <iostream>
-#include <strstream>
+#include <sstream>
 #include <unordered_map>
 namespace fs = std::filesystem;
 
@@ -166,11 +166,11 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
         auto           gpuSubAllocator = std::make_unique<tf::DeviceMemAllocator>(
             streamExecutor, deviceId, false, std::vector<tf::SubAllocator::Visitor>{},
             std::vector<tf::SubAllocator::Visitor>{});
-        std::strstream name;
+        std::ostringstream name;
         name << "GPU_" << deviceId.value() << "_bfc";
         auto gpuAllocator = std::make_shared<tf::GPUBFCAllocator>(
             std::move(gpuSubAllocator), ((size + alignment - 1) / alignment) * alignment,
-            std::string(name.str()), tf::GPUBFCAllocator::Options{});
+            name.str(), tf::GPUBFCAllocator::Options{});
 
         return gpuAllocator;
     };

@@ -1,9 +1,8 @@
-.DEFAULT_GOAL := build
+.DEFAULT_GOAL := example-tensorflow
 
 #*****************************************#
 #*               VARIABLES               *#
 #*****************************************#
-SHELL := /usr/bin/env bash
 
 THIS_MAKEFILE := $(realpath $(lastword $(MAKEFILE_LIST)))
 THIS_MAKEFILE_DIR := $(patsubst %/,%,$(dir $(THIS_MAKEFILE)))
@@ -15,10 +14,18 @@ ifeq ($(CPM_SOURCE_CACHE),)
   CPM_SOURCE_CACHE := $(THIRD_PARTY_DIR)
 endif
 
-POETRY := POETRY_VIRTUALENVS_IN_PROJECT=true poetry
+POETRY := poetry
 PYTHON := $(POETRY) run python3
 PYTHONPATH := $(REPO_DIR)/src
-CMAKE := CPM_SOURCE_CACHE=$(CPM_SOURCE_CACHE) PATH=$(REPO_DIR)/.venv/bin:$(PATH) CC=clang CXX=clang++ cmake
+CMAKE := cmake
+
+ENVS := CC=clang CXX=clang++
+ENVS += CPM_SOURCE_CACHE=$(CPM_SOURCE_CACHE)
+ENVS += POETRY_VIRTUALENVS_IN_PROJECT=true
+ENVS += PATH=$(REPO_DIR)/.venv/bin:$(PATH)
+ENVS += LD_LIBRARY_PATH=$(THIRD_PARTY_DIR)/libtensorflow_cc/lib:$(LD_LIBRARY_PATH)
+
+SHELL := /usr/bin/env $(ENVS) bash
 
 #*****************************************#
 #*               UTILITIES               *#
@@ -38,10 +45,19 @@ endef
 example-pycxpress:
 	env -C $(REPO_DIR)/src/PyCXpress/example $(POETRY) run make run
 
-example-tensorflow:
-	$(call message, Not implemented)
+example-graph: ./sample/saved_model/saved_model.pb
+./sample/saved_model/saved_model.pb: ./sample/main.py
+	env -C $(THIS_MAKEFILE_DIR)/sample $(PYTHON) main.py
+
+example-tensorflow: build-sample example-graph
+	$(call message, Run ./build/sample/sample)
+	@env TF_CPP_MIN_LOG_LEVEL=2 $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- ./sample/saved_model/
 
 example: example-pycxpress example-tensorflow
+
+build: build-sample build-dist
+rebuild: build-remove build
+.NOTPARALLEL: rebuild
 
 #*****************************************#
 #*                OPTIONS                *#
@@ -49,8 +65,11 @@ example: example-pycxpress example-tensorflow
 
 CMAKE_OPTIONS :=
 
-ifeq ($(CMAKE_PREFIX_PATH),)
-	CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
+USE_LIBTENSORFLOW_CC := 1
+ifeq ($(USE_LIBTENSORFLOW_CC),1)
+	ifeq ($(CMAKE_OPTIONS),)
+		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
+	endif
 endif
 
 ifneq ($(TYPE),)
@@ -88,26 +107,20 @@ endif
 #*                ACTIONS                *#
 #*****************************************#
 
+#* CMake
 source-all: FORCE
 	$(call message, Clean)
 	rm -rf build
 	$(call message, Source)
 	$(CMAKE) -B build $(CMAKE_OPTIONS)
 
-source: FORCE
+source-sample: FORCE
 	$(call message, Source)
 	$(CMAKE) -S sample -B build/sample $(CMAKE_OPTIONS)
 
-build: FORCE
+build-sample: source-sample
 	$(call message, Build)
 	$(CMAKE) --build build/sample
-
-graph: ./sample/main.py
-	env -C $(THIS_MAKEFILE_DIR)/sample $(PYTHON) main.py
-
-run: build graph
-	$(call message, Run ./build/sample/sample)
-	@env TF_CPP_MIN_LOG_LEVEL=2 $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- ./sample/models/saved_model/
 
 doc: FORCE
 	$(call message, Source)
@@ -119,12 +132,12 @@ doc: FORCE
 #* Poetry
 .PHONY: poetry-download
 poetry-download:
-	curl -sSL https://install.python-poetry.org | $(PYTHON) -
+	curl -sSL https://install.python-poetry.org | python3 -
 	~/.local/share/pypoetry/venv/bin/pip install poetry-plugin-export
 
 .PHONY: poetry-remove
 poetry-remove:
-	curl -sSL https://install.python-poetry.org | $(PYTHON) - --uninstall
+	curl -sSL https://install.python-poetry.org | python3 - --uninstall
 
 #* Installation
 .PHONY: install
@@ -133,7 +146,7 @@ install:
 	$(POETRY) export --without-hashes > requirements.txt
 	$(POETRY) export -E tensorflow --without-hashes > requirements.tensorflow.txt
 	$(POETRY) install -n --extras tensorflow
-	-$(POETRY) run mypy --install-types --non-interactive ./
+	-$(POETRY) run mypy --install-types --non-interactive ./src
 
 .PHONY: install-conda-deps install-conda-deps-manually
 install-conda-deps:
@@ -198,7 +211,7 @@ check-codestyle:
 
 .PHONY: mypy
 mypy:
-	$(POETRY) run mypy --config-file pyproject.toml ./
+	$(POETRY) run mypy --config-file pyproject.toml ./src
 
 .PHONY: check-safety
 check-safety:
@@ -242,6 +255,7 @@ build-dist:
 .PHONY: build-remove
 build-remove:
 	rm -rf dist/
+	rm -rf build/
 
 .PHONY: cleanup
 cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove

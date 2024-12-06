@@ -19,7 +19,9 @@ endif()
 if(ENABLE_TORCH)
   find_package(Torch REQUIRED)
 else()
-  find_package(TensorFlow REQUIRED)
+  if(USE_LIBTENSORFLOW_CC)
+    find_package(TensorFlow REQUIRED)
+  endif()
 endif()
 
 # ---- Add source files ----
@@ -43,12 +45,20 @@ target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SO
 if(ENABLE_TORCH)
   target_include_directories(${PROJECT_NAME} PRIVATE ${TORCH_INCLUDE_DIRS})
 else()
-  target_include_directories(${PROJECT_NAME} PRIVATE ${TensorFlow_INCLUDE_DIRS})
+  if(USE_LIBTENSORFLOW_CC)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TensorFlow_INCLUDE_DIRS})
+  else()
+    target_include_directories(
+      ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/tensorflow_cpy>
+    )
+  endif()
 endif()
 
 # link options
 if(ENABLE_TORCH)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${TORCH_LIBRARIES})
 else()
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${TensorFlow_LIBRARIES})
+  if(USE_LIBTENSORFLOW_CC)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${TensorFlow_LIBRARIES})
+  endif()
 endif()
