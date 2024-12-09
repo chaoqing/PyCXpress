@@ -65,10 +65,10 @@ rebuild: build-remove build
 
 CMAKE_OPTIONS :=
 
-USE_LIBTENSORFLOW_CC := 1
+USE_LIBTENSORFLOW_CC := 0
 ifeq ($(USE_LIBTENSORFLOW_CC),1)
 	ifeq ($(CMAKE_OPTIONS),)
-		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
+		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/protobuf;$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
 	endif
 endif
 
@@ -114,9 +114,12 @@ source-all: FORCE
 	$(call message, Source)
 	$(CMAKE) -B build $(CMAKE_OPTIONS)
 
+PROTO_FILES := $(shell env -C $(REPO_DIR)/src/TensorflowCpy/source/ find ./ -type f -name '*.proto')
 source-sample: FORCE
 	$(call message, Source)
 	$(CMAKE) -S sample -B build/sample $(CMAKE_OPTIONS)
+	$(call message, Generating Protobuf)
+	env -C $(REPO_DIR)/src/TensorflowCpy/source/ $(THIRD_PARTY_DIR)/protobuf/bin/protoc --proto_path ./ --cpp_out ../include/tensorflow_cpy/ $(PROTO_FILES)
 
 build-sample: source-sample
 	$(call message, Build)
@@ -254,8 +257,9 @@ build-dist:
 
 .PHONY: build-remove
 build-remove:
-	rm -rf dist/
-	rm -rf build/
+	rm -rf $(REPO_DIR)/dist/
+	find $(REPO_DIR)/src/TensorflowCpy/include/ -name '*.pb.cc' -or -name '*.pb.h' -exec rm {} \;
+	rm -rf $(REPO_DIR)/build/
 
 .PHONY: cleanup
 cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove

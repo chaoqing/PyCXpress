@@ -21,6 +21,8 @@ if(ENABLE_TORCH)
 else()
   if(USE_LIBTENSORFLOW_CC)
     find_package(TensorFlow REQUIRED)
+  else()
+    #find_package(Protobuf REQUIRED)
   endif()
 endif()
 
@@ -51,6 +53,10 @@ else()
     target_include_directories(
       ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/tensorflow_cpy>
     )
+    target_include_directories(
+      ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../../third_party/protobuf/include>
+    )
+    #target_include_directories(${PROJECT_NAME} PRIVATE ${Protobuf_INCLUDE_DIRS})
   endif()
 endif()
 
@@ -60,5 +66,7 @@ if(ENABLE_TORCH)
 else()
   if(USE_LIBTENSORFLOW_CC)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${TensorFlow_LIBRARIES})
+  else()
+    #target_link_libraries(${PROJECT_NAME} PRIVATE ${Protobuf_LIBRARIES})
   endif()
 endif()

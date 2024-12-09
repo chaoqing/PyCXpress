@@ -66,6 +66,14 @@ install-clang:
 install-cmake:
 	chmod +x $(THIS_MAKEFILE_DIR)/.devcontainer/reinstall-cmake.sh
 	sudo $(THIS_MAKEFILE_DIR)/.devcontainer/reinstall-cmake.sh 3.22.2
+
+install-cmake:
+  git clone https://ghp.ci/https://github.com/protocolbuffers/protobuf
+  git submodule update --init --recursive
+  ./autogen.sh
+  ./configure --prefix=$HOME/Work/PyCXpress/third_party/protobuf
+  make
+  make install
 ```
 
 ## 🛡 License

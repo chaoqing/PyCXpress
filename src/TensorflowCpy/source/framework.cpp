@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <iostream>
 #include <sstream>
-#include <unordered_map>
 namespace fs = std::filesystem;
 
 #include <signal.h>
@@ -30,21 +29,23 @@ void wait_for_debugger_attach() {
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-#include <tensorflow/cc/client/client_session.h>
-#include <tensorflow/cc/ops/standard_ops.h>
+
 #include <tensorflow/cc/saved_model/loader.h>
 #include <tensorflow/cc/saved_model/tag_constants.h>
 #include <tensorflow/core/common_runtime/device/device_id.h>
 #include <tensorflow/core/common_runtime/device/device_id_utils.h>
+#include <tensorflow/core/common_runtime/device/device_mem_allocator.h>
 #include <tensorflow/core/common_runtime/device_mgr.h>
 #include <tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.h>
 #include <tensorflow/core/common_runtime/gpu/gpu_init.h>
+#include "tensorflow/core/platform/types.h"
 #include <tensorflow/core/framework/tensor.h>
-#include <tensorflow/core/lib/io/path.h>
+#include <tensorflow/core/framework/device.h>
+#include <tensorflow/core/framework/op.h>
+#include <tensorflow/core/framework/types.h>
 #include <tensorflow/core/platform/env.h>
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/util/stream_executor_util.h>
-#include <tensorflow/stream_executor/cuda/cuda_driver.h>
 
 #pragma GCC diagnostic pop
 
