@@ -132,6 +132,10 @@ class DeviceDescription {
   // value will be provided.
   static const char *kUndefinedString;
 
+  static DeviceDescription& CreateDummy(){
+    static DeviceDescription dummy;
+    return dummy;
+  }
  private:
   DeviceDescription();
 

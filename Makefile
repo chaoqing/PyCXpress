@@ -56,7 +56,7 @@ example-tensorflow: build-sample example-graph
 example: example-pycxpress example-tensorflow
 
 build: build-sample build-dist
-rebuild: build-remove build
+rebuild: cleanup source-all build
 .NOTPARALLEL: rebuild
 
 #*****************************************#
@@ -265,11 +265,17 @@ build-dist:
 	$(PYTHON) -m build --outdir dist/
 
 .PHONY: build-remove
-build-remove:
-	rm -rf $(REPO_DIR)/dist/
-	rm -rf $(REPO_DIR)/build/
+build-remove: cleanup
+	test ! -d build/sample || cmake --build build/sample --target clean
+	test ! -d build/tests  || cmake --build build/tests --target clean
+	test ! -d build/doc    || cmake --build build/doc --target clean
 
 .PHONY: cleanup
-cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove
+cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove build-remove
+
+.PHONY: distclean
+distclean: cleanup
+	rm -rf $(REPO_DIR)/dist/
+	rm -rf $(REPO_DIR)/build/
 
 FORCE:

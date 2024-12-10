@@ -31,27 +31,28 @@ void wait_for_debugger_attach() {
 
 
 #if ENABLE_TENSORFLOW_CPY
-#include <tensorflow_cpy/tensorflow.h>
+#    include <tensorflow_cpy/tensorflow.h>
 
 namespace tf = tensorflow_cpy::tensorflow;
 namespace se = tensorflow_cpy::stream_executor;
 #else
-#include <tensorflow/cc/saved_model/loader.h>
-#include <tensorflow/cc/saved_model/tag_constants.h>
-#include <tensorflow/core/common_runtime/device/device_id.h>
-#include <tensorflow/core/common_runtime/device/device_id_utils.h>
-#include <tensorflow/core/common_runtime/device/device_mem_allocator.h>
-#include <tensorflow/core/common_runtime/device_mgr.h>
-#include <tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.h>
-#include <tensorflow/core/common_runtime/gpu/gpu_init.h>
-#include "tensorflow/core/platform/types.h"
-#include <tensorflow/core/framework/tensor.h>
-#include <tensorflow/core/framework/device.h>
-#include <tensorflow/core/framework/op.h>
-#include <tensorflow/core/framework/types.h>
-#include <tensorflow/core/platform/env.h>
-#include <tensorflow/core/public/session.h>
-#include <tensorflow/core/util/stream_executor_util.h>
+#    include <tensorflow/cc/saved_model/loader.h>
+#    include <tensorflow/cc/saved_model/tag_constants.h>
+#    include <tensorflow/core/common_runtime/device/device_id.h>
+#    include <tensorflow/core/common_runtime/device/device_id_utils.h>
+#    include <tensorflow/core/common_runtime/device/device_mem_allocator.h>
+#    include <tensorflow/core/common_runtime/device_mgr.h>
+#    include <tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.h>
+#    include <tensorflow/core/common_runtime/gpu/gpu_init.h>
+#    include <tensorflow/core/framework/device.h>
+#    include <tensorflow/core/framework/op.h>
+#    include <tensorflow/core/framework/tensor.h>
+#    include <tensorflow/core/framework/types.h>
+#    include <tensorflow/core/platform/env.h>
+#    include <tensorflow/core/public/session.h>
+#    include <tensorflow/core/util/stream_executor_util.h>
+
+#    include "tensorflow/core/platform/types.h"
 
 namespace tf = tensorflow;
 namespace se = stream_executor;

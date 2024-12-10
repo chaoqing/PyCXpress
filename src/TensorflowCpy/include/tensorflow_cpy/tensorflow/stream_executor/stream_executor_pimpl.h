@@ -3,7 +3,6 @@
 #define TENSORFLOW_CPY_STREAM_EXECUTOR_STREAM_EXECUTOR_PIMPL_H_
 
 
-#include "../core/platform/statusor.h"
 #include "../stream_executor/device_memory.h"
 #include "../stream_executor/platform.h"
 
@@ -53,7 +52,9 @@ class StreamExecutor {
   // elements.
   template <typename T>
   DeviceMemory<T> AllocateArray(uint64_t element_count,
-                                int64_t memory_space = 0);
+                                int64_t memory_space = 0){
+    return DeviceMemory<T>{};
+  }
 
   // Convenience wrapper that allocates space for a single element of type T in
   // device memory.

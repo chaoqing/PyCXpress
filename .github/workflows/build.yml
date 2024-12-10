@@ -28,6 +28,7 @@ jobs:
         run: |
           poetry config virtualenvs.in-project true
           poetry install
+          make protobuf-install
 
       - name: Run style checks
         run: |

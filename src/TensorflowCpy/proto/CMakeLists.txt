@@ -5,7 +5,7 @@ file(GLOB_RECURSE protos CONFIGURE_DEPENDS
 	)
 
 add_library(proto-objects OBJECT ${protos})
-set(PROTO_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/protobuf-generated")
+set(PROTO_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../include")
 make_directory(${PROTO_BINARY_DIR})
 
 protobuf_generate(
