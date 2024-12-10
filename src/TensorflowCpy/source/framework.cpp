@@ -30,6 +30,12 @@ void wait_for_debugger_attach() {
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
 
+#if ENABLE_TENSORFLOW_CPY
+#include <tensorflow_cpy/tensorflow.h>
+
+namespace tf = tensorflow_cpy::tensorflow;
+namespace se = tensorflow_cpy::stream_executor;
+#else
 #include <tensorflow/cc/saved_model/loader.h>
 #include <tensorflow/cc/saved_model/tag_constants.h>
 #include <tensorflow/core/common_runtime/device/device_id.h>
@@ -47,10 +53,11 @@ void wait_for_debugger_attach() {
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/util/stream_executor_util.h>
 
-#pragma GCC diagnostic pop
-
 namespace tf = tensorflow;
 namespace se = stream_executor;
+#endif
+
+#pragma GCC diagnostic pop
 
 class TensorBufferView : public tf::TensorBuffer {
     std::size_t m_len;

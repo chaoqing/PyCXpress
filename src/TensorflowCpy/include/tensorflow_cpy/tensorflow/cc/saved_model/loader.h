@@ -1,16 +1,19 @@
 /// SavedModel loading functions and SavedModelBundle struct.
 
-#ifndef TENSORFLOW_CC_SAVED_MODEL_LOADER_H_
-#define TENSORFLOW_CC_SAVED_MODEL_LOADER_H_
+#ifndef TENSORFLOW_CPY_CC_SAVED_MODEL_LOADER_H_
+#define TENSORFLOW_CPY_CC_SAVED_MODEL_LOADER_H_
 
 #include <string>
 #include <unordered_set>
 
-#include "tensorflow/core/platform/status.h"
-#include "tensorflow/core/protobuf/meta_graph.pb.h"
-#include "tensorflow/core/public/session.h"
+#include <tensorflow/core/protobuf/meta_graph.pb.h>
+#include "../../core/platform/status.h"
+#include "../../core/public/session.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 
 /// SavedModel representation once the SavedModel is loaded from storage.
@@ -73,5 +76,8 @@ Status LoadSavedModel(const SessionOptions& session_options,
 bool MaybeSavedModelDirectory(const std::string& export_dir);
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CC_SAVED_MODEL_LOADER_H_
+
+#endif  // TENSORFLOW_CPY_CC_SAVED_MODEL_LOADER_H_

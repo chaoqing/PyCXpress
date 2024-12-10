@@ -12,17 +12,20 @@
 // * Task numbers are within the specified replica, so there are as
 //   many "task zeros" as replicas.
 
-#ifndef TENSORFLOW_CORE_FRAMEWORK_DEVICE_H_
-#define TENSORFLOW_CORE_FRAMEWORK_DEVICE_H_
+#ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_DEVICE_H_
+#define TENSORFLOW_CPY_CORE_FRAMEWORK_DEVICE_H_
 
 #include <string>
 
-#include "tensorflow/core/framework/allocator.h"
-#include "tensorflow/core/framework/device_attributes.pb.h"
-#include "tensorflow/core/platform/env.h"
-#include "tensorflow/core/platform/status.h"
+#include <tensorflow/core/framework/device_attributes.pb.h>
+#include "../../core/framework/allocator.h"
+#include "../../core/platform/env.h"
+#include "../../core/platform/status.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 class DeviceBase {
  public:
   explicit DeviceBase(Env* env) : env_(env) {}
@@ -85,5 +88,8 @@ class Device : public DeviceBase {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_FRAMEWORK_DEVICE_H_
+
+#endif  // TENSORFLOW_CPY_CORE_FRAMEWORK_DEVICE_H_

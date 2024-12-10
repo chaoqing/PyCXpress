@@ -1,10 +1,13 @@
-#ifndef TENSORFLOW_PUBLIC_SESSION_OPTIONS_H_
-#define TENSORFLOW_PUBLIC_SESSION_OPTIONS_H_
+#ifndef TENSORFLOW_CPY_PUBLIC_SESSION_OPTIONS_H_
+#define TENSORFLOW_CPY_PUBLIC_SESSION_OPTIONS_H_
 
 #include <string>
-#include "tensorflow/core/protobuf/config.pb.h"
+#include <tensorflow/core/protobuf/config.pb.h>
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 class Env;
 
@@ -45,5 +48,7 @@ struct SessionOptions {
 };
 
 }  // end namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_PUBLIC_SESSION_OPTIONS_H_
+#endif  // TENSORFLOW_CPY_PUBLIC_SESSION_OPTIONS_H_

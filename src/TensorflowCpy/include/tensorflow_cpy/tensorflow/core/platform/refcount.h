@@ -1,9 +1,11 @@
-#ifndef TENSORFLOW_CORE_PLATFORM_REFCOUNT_H_
-#define TENSORFLOW_CORE_PLATFORM_REFCOUNT_H_
+#ifndef TENSORFLOW_CPY_CORE_PLATFORM_REFCOUNT_H_
+#define TENSORFLOW_CPY_CORE_PLATFORM_REFCOUNT_H_
 
 #include <atomic>
 #include <memory>
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
 namespace core {
 
@@ -52,5 +54,8 @@ using RefCountPtr = std::unique_ptr<T, RefCountDeleter>;
 
 }  // namespace core
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_PLATFORM_REFCOUNT_H_
+
+#endif  // TENSORFLOW_CPY_CORE_PLATFORM_REFCOUNT_H_

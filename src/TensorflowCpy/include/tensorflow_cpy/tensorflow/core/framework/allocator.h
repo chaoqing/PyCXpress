@@ -1,15 +1,18 @@
-#ifndef TENSORFLOW_CORE_FRAMEWORK_ALLOCATOR_H_
-#define TENSORFLOW_CORE_FRAMEWORK_ALLOCATOR_H_
+#ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_ALLOCATOR_H_
+#define TENSORFLOW_CPY_CORE_FRAMEWORK_ALLOCATOR_H_
 
 #include <stdlib.h>
 
 #include <functional>
 #include <optional>
 
-#include "tensorflow/core/platform/logging.h"
-#include "tensorflow/core/platform/macros.h"
+#include "../../core/platform/logging.h"
+#include "../../core/platform/macros.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 // Runtime statistics collected by an allocator. Exactly the same as
 // stream_executor::AllocatorStats, but independently defined to preserve the
@@ -221,5 +224,8 @@ class SubAllocator {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_FRAMEWORK_ALLOCATOR_H_
+
+#endif  // TENSORFLOW_CPY_CORE_FRAMEWORK_ALLOCATOR_H_

@@ -1,21 +1,22 @@
 // Defines types and declares functions for identifying and extracting
 // information about the types of platforms and supporting libraries for which
 // StreamExecutor implementations exist.
-#ifndef TENSORFLOW_STREAM_EXECUTOR_PLATFORM_H_
-#define TENSORFLOW_STREAM_EXECUTOR_PLATFORM_H_
+#ifndef TENSORFLOW_CPY_STREAM_EXECUTOR_PLATFORM_H_
+#define TENSORFLOW_CPY_STREAM_EXECUTOR_PLATFORM_H_
 
 #include <map>
+#include <memory>
 
-//#include "tensorflow/stream_executor/device_options.h"
-//#include "tensorflow/stream_executor/lib/status.h"
-#include "tensorflow/core/platform/statusor.h"
-//#include "tensorflow/stream_executor/platform/port.h"
-//#include "tensorflow/stream_executor/plugin.h"
-//#include "tensorflow/stream_executor/trace_listener.h"
+#include "../core/platform/statusor.h"
 
-
+// clang-format off
+namespace tensorflow_cpy {
 namespace stream_executor {
-//#include "tensorflow/stream_executor/device_description.h"
+namespace port {
+  using ::tensorflow_cpy::tensorflow::Status;
+  using ::tensorflow_cpy::tensorflow::StatusOr;
+};
+//#include "../stream_executor/device_description.h"
 // Data that describes the execution target of the StreamExecutor, in terms of
 // important logical parameters. These include dimensionality limits and
 // physical parameters of interest, such as number of cores present on the
@@ -356,5 +357,7 @@ class Platform {
 };
 
 }  // namespace stream_executor
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_STREAM_EXECUTOR_PLATFORM_H_
+#endif  // TENSORFLOW_CPY_STREAM_EXECUTOR_PLATFORM_H_

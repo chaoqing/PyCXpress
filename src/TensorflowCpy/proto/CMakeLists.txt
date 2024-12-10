@@ -15,5 +15,5 @@ protobuf_generate(
 	IMPORT_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/tensorflow"
 	)
 
-target_include_directories(proto-objects PUBLIC "$<BUILD_INTERFACE:${PROTO_BINARY_DIR}>")
+target_include_directories(proto-objects SYSTEM PUBLIC "$<BUILD_INTERFACE:${PROTO_BINARY_DIR}>")
 target_link_libraries(proto-objects PUBLIC protobuf::libprotobuf)

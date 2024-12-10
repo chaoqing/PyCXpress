@@ -1,11 +1,14 @@
 
-#ifndef TENSORFLOW_CORE_UTIL_STREAM_EXECUTOR_UTIL_H_
-#define TENSORFLOW_CORE_UTIL_STREAM_EXECUTOR_UTIL_H_
+#ifndef TENSORFLOW_CPY_CORE_UTIL_STREAM_EXECUTOR_UTIL_H_
+#define TENSORFLOW_CPY_CORE_UTIL_STREAM_EXECUTOR_UTIL_H_
 
-#include "tensorflow/core/framework/tensor.h"
-#include "tensorflow/stream_executor/device_memory.h"
+#include "../../core/framework/tensor.h"
+#include "../../stream_executor/device_memory.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
   namespace se = stream_executor;
 
 // StreamExecutorUtil contains functions useful for interfacing
@@ -22,5 +25,8 @@ class StreamExecutorUtil {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_UTIL_STREAM_EXECUTOR_UTIL_H_
+
+#endif  // TENSORFLOW_CPY_CORE_UTIL_STREAM_EXECUTOR_UTIL_H_

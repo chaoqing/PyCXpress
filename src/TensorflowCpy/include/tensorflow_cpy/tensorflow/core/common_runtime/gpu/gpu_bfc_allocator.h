@@ -1,13 +1,16 @@
 
-#ifndef TENSORFLOW_CORE_COMMON_RUNTIME_GPU_GPU_BFC_ALLOCATOR_H_
-#define TENSORFLOW_CORE_COMMON_RUNTIME_GPU_GPU_BFC_ALLOCATOR_H_
+#ifndef TENSORFLOW_CPY_CORE_COMMON_RUNTIME_GPU_GPU_BFC_ALLOCATOR_H_
+#define TENSORFLOW_CPY_CORE_COMMON_RUNTIME_GPU_GPU_BFC_ALLOCATOR_H_
 
 #include <memory>
 #include <string>
 
-#include "tensorflow/core/framework/allocator.h"
+#include "../../../core/framework/allocator.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 // A GPU memory allocator that implements a 'best-fit with coalescing'
 // algorithm.
@@ -36,5 +39,8 @@ class GPUBFCAllocator : public Allocator {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_COMMON_RUNTIME_GPU_GPU_BFC_ALLOCATOR_H_
+
+#endif  // TENSORFLOW_CPY_CORE_COMMON_RUNTIME_GPU_GPU_BFC_ALLOCATOR_H_

@@ -1,16 +1,23 @@
 
-#ifndef TENSORFLOW_CORE_COMMON_RUNTIME_GPU_GPU_INIT_H_
-#define TENSORFLOW_CORE_COMMON_RUNTIME_GPU_GPU_INIT_H_
+#ifndef TENSORFLOW_CPY_CORE_COMMON_RUNTIME_GPU_GPU_INIT_H_
+#define TENSORFLOW_CPY_CORE_COMMON_RUNTIME_GPU_GPU_INIT_H_
 
 #include <string>
 
-#include "tensorflow/core/platform/status.h"
+#include "../../../core/platform/status.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace stream_executor {
 class Platform;
 }  // namespace stream_executor
+}  // namespace tensorflow_cpy
+// clang-format on
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 // Initializes the GPU platform and returns OK if the GPU
 // platform could be initialized.
@@ -28,5 +35,8 @@ stream_executor::Platform* GPUMachineManager();
 std::string GpuPlatformName();
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_COMMON_RUNTIME_GPU_GPU_INIT_H_
+
+#endif  // TENSORFLOW_CPY_CORE_COMMON_RUNTIME_GPU_GPU_INIT_H_

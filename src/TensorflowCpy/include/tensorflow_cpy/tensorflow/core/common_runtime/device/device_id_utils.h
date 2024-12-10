@@ -1,12 +1,15 @@
 
-#ifndef TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_DEVICE_ID_UTILS_H_
-#define TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_DEVICE_ID_UTILS_H_
+#ifndef TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_DEVICE_ID_UTILS_H_
+#define TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_DEVICE_ID_UTILS_H_
 
 #include <string>
-#include "tensorflow/core/common_runtime/device/device_id.h"
-#include "tensorflow/stream_executor/platform.h"
+#include "../../../core/common_runtime/device/device_id.h"
+#include "../../../stream_executor/platform.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 namespace se = stream_executor;
 
 // Utility methods for translation between TensorFlow device ids and platform
@@ -27,5 +30,8 @@ class DeviceIdUtil {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_DEVICE_ID_UTILS_H_
+
+#endif  // TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_DEVICE_ID_UTILS_H_

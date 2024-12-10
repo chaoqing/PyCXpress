@@ -1,9 +1,12 @@
-#ifndef TENSORFLOW_CORE_FRAMEWORK_OP_H_
-#define TENSORFLOW_CORE_FRAMEWORK_OP_H_
+#ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_OP_H_
+#define TENSORFLOW_CPY_CORE_FRAMEWORK_OP_H_
 
-#include "tensorflow/core/platform/status.h"
+#include "../../core/platform/status.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 // The standard implementation of OpRegistryInterface, along with a
 // global singleton used for registering ops via the REGISTER
@@ -48,5 +51,8 @@ class OpRegistry {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_FRAMEWORK_OP_H_
+
+#endif  // TENSORFLOW_CPY_CORE_FRAMEWORK_OP_H_

@@ -51,13 +51,16 @@
 // stored value cannot invalidate the argument; in other words, the argument
 // cannot be an alias for the current value, or anything owned by the current
 // value.
-#ifndef TENSORFLOW_CORE_PLATFORM_STATUSOR_H_
-#define TENSORFLOW_CORE_PLATFORM_STATUSOR_H_
+#ifndef TENSORFLOW_CPY_CORE_PLATFORM_STATUSOR_H_
+#define TENSORFLOW_CPY_CORE_PLATFORM_STATUSOR_H_
 
-#include "tensorflow/core/platform/macros.h"
-#include "tensorflow/core/platform/status.h"
+#include "../../core/platform/macros.h"
+#include "../../core/platform/status.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 #if defined(__clang__)
 // Only clang supports warn_unused_result as a type annotation.
@@ -237,12 +240,8 @@ class StatusOr {
   lhs = std::move(statusor).ValueOrDie()
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-namespace stream_executor {
-namespace port {
-  using ::tensorflow::Status;
-  using ::tensorflow::StatusOr;
-};
-};
 
-#endif  // TENSORFLOW_CORE_PLATFORM_STATUSOR_H_
+#endif  // TENSORFLOW_CPY_CORE_PLATFORM_STATUSOR_H_

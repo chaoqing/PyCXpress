@@ -1,13 +1,16 @@
 
-#ifndef TENSORFLOW_STREAM_EXECUTOR_STREAM_EXECUTOR_PIMPL_H_
-#define TENSORFLOW_STREAM_EXECUTOR_STREAM_EXECUTOR_PIMPL_H_
+#ifndef TENSORFLOW_CPY_STREAM_EXECUTOR_STREAM_EXECUTOR_PIMPL_H_
+#define TENSORFLOW_CPY_STREAM_EXECUTOR_STREAM_EXECUTOR_PIMPL_H_
 
 
-#include "tensorflow/stream_executor/device_memory.h"
-#include "tensorflow/core/platform/statusor.h"
-#include "tensorflow/stream_executor/platform.h"
+#include "../core/platform/statusor.h"
+#include "../stream_executor/device_memory.h"
+#include "../stream_executor/platform.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace stream_executor {
+  using namespace ::tensorflow;
 
 
 class Stream;
@@ -276,5 +279,7 @@ class StreamExecutor {
 };
 
 }  // namespace stream_executor
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_STREAM_EXECUTOR_STREAM_EXECUTOR_PIMPL_H_
+#endif  // TENSORFLOW_CPY_STREAM_EXECUTOR_STREAM_EXECUTOR_PIMPL_H_

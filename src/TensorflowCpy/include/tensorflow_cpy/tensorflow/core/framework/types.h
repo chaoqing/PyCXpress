@@ -1,14 +1,17 @@
 
-#ifndef TENSORFLOW_CORE_FRAMEWORK_TYPES_H_
-#define TENSORFLOW_CORE_FRAMEWORK_TYPES_H_
+#ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_TYPES_H_
+#define TENSORFLOW_CPY_CORE_FRAMEWORK_TYPES_H_
 
 #include <string>
 
-#include "tensorflow/core/framework/types.pb.h"
-#include "tensorflow/core/platform/types.h"
-#include "tensorflow/core/platform/macros.h"
+#include <tensorflow/core/framework/types.pb.h>
+#include "../../core/platform/types.h"
+#include "../../core/platform/macros.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 class Variant;
 
@@ -125,5 +128,8 @@ struct DataTypeToEnum<unsigned long long> {
 int DataTypeSize(DataType dt);
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_FRAMEWORK_TYPES_H_
+
+#endif  // TENSORFLOW_CPY_CORE_FRAMEWORK_TYPES_H_

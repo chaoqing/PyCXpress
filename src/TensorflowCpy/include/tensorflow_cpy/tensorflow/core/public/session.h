@@ -1,18 +1,23 @@
 
-#ifndef TENSORFLOW_CORE_PUBLIC_SESSION_H_
-#define TENSORFLOW_CORE_PUBLIC_SESSION_H_
+#ifndef TENSORFLOW_CPY_CORE_PUBLIC_SESSION_H_
+#define TENSORFLOW_CPY_CORE_PUBLIC_SESSION_H_
 
 #include <string>
 #include <vector>
 
-#include "tensorflow/core/framework/device_attributes.pb.h"
-#include "tensorflow/core/framework/graph.pb.h"
-#include "tensorflow/core/framework/tensor.h"
-#include "tensorflow/core/platform/status.h"
-#include "tensorflow/core/protobuf/config.pb.h"
-#include "tensorflow/core/public/session_options.h"
+#include <tensorflow/core/framework/device_attributes.pb.h>
+#include <tensorflow/core/framework/graph.pb.h>
+#include <tensorflow/core/protobuf/config.pb.h>
 
+#include "../../core/framework/tensor.h"
+#include "../../core/platform/status.h"
+#include "../../core/public/session_options.h"
+
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
+
 class DeviceMgr;
 
 
@@ -268,5 +273,7 @@ Status Reset(const SessionOptions& options,
 Session* NewSession(const SessionOptions& options);
 
 }  // end namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_PUBLIC_SESSION_H_
+#endif  // TENSORFLOW_CPY_CORE_PUBLIC_SESSION_H_

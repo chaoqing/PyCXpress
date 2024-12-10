@@ -6,13 +6,15 @@
 // be specialized for a given allocation type (like a device T*) using
 // DeviceMemory<T>.
 
-#ifndef TENSORFLOW_STREAM_EXECUTOR_DEVICE_MEMORY_H_
-#define TENSORFLOW_STREAM_EXECUTOR_DEVICE_MEMORY_H_
+#ifndef TENSORFLOW_CPY_STREAM_EXECUTOR_DEVICE_MEMORY_H_
+#define TENSORFLOW_CPY_STREAM_EXECUTOR_DEVICE_MEMORY_H_
 
 #include <stddef.h>
 #include <cstdint>
 
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace stream_executor {
 
 class DeviceMemoryAllocator;
@@ -143,5 +145,7 @@ class DeviceMemory final : public DeviceMemoryBase {
 };
 
 }  // namespace stream_executor
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_STREAM_EXECUTOR_DEVICE_MEMORY_H_
+#endif  // TENSORFLOW_CPY_STREAM_EXECUTOR_DEVICE_MEMORY_H_

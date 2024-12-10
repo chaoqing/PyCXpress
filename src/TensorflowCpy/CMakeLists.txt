@@ -22,6 +22,7 @@ else()
     find_package(TensorFlow REQUIRED)
   else()
 	  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/proto")
+    add_compile_definitions(ENABLE_TENSORFLOW_CPY=1)
   endif()
 endif()
 
@@ -50,10 +51,6 @@ if(ENABLE_TORCH)
 else()
   if(USE_LIBTENSORFLOW_CC)
     target_include_directories(${PROJECT_NAME} PRIVATE ${TensorFlow_INCLUDE_DIRS})
-  else()
-    target_include_directories(
-      ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/tensorflow_cpy>
-    )
   endif()
 endif()
 

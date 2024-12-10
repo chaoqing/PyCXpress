@@ -1,14 +1,17 @@
 
-#ifndef TENSORFLOW_CORE_PLATFORM_STATUS_H_
-#define TENSORFLOW_CORE_PLATFORM_STATUS_H_
+#ifndef TENSORFLOW_CPY_CORE_PLATFORM_STATUS_H_
+#define TENSORFLOW_CPY_CORE_PLATFORM_STATUS_H_
 
 #include <iosfwd>
 #include <string>
 
-#include "tensorflow/core/platform/macros.h"
-#include "tensorflow/core/protobuf/error_codes.pb.h"
+#include <tensorflow/core/protobuf/error_codes.pb.h>
+#include "../../core/platform/macros.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 #if defined(__clang__)
 // Only clang supports warn_unused_result as a type annotation.
@@ -37,7 +40,7 @@ class Status {
   /// Returns true iff the status indicates success.
   bool ok() const;
 
-  tensorflow::error::Code code() const;
+  errors::Code code() const;
 
   const std::string& error_message() const ;
 
@@ -85,7 +88,7 @@ Status OkStatus();
 std::ostream& operator<<(std::ostream& os, const Status& x);
 
 
-std::string error_name(error::Code code);
+std::string error_name(errors::Code code);
 
 /*
 inline std::string* TfCheckOpHelper(::tensorflow::Status v,
@@ -112,5 +115,8 @@ inline std::string* TfCheckOpHelper(::tensorflow::Status v,
 */
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_PLATFORM_STATUS_H_
+
+#endif  // TENSORFLOW_CPY_CORE_PLATFORM_STATUS_H_

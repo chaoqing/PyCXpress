@@ -1,12 +1,15 @@
 
-#ifndef TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_DEVICE_MEM_ALLOCATOR_H_
-#define TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_DEVICE_MEM_ALLOCATOR_H_
+#ifndef TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_DEVICE_MEM_ALLOCATOR_H_
+#define TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_DEVICE_MEM_ALLOCATOR_H_
 
-#include "tensorflow/core/common_runtime/device/device_id.h"
-#include "tensorflow/core/framework/allocator.h"
-#include "tensorflow/stream_executor/stream_executor_pimpl.h"
+#include "../../../core/common_runtime/device/device_id.h"
+#include "../../../core/framework/allocator.h"
+#include "../../../stream_executor/stream_executor_pimpl.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
   namespace se = stream_executor;
 
 // Suballocator for StreamExecutor-based device memory.
@@ -70,5 +73,8 @@ class DeviceMemAllocator : public SubAllocator {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_DEVICE_MEM_ALLOCATOR_H_
+
+#endif  // TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_DEVICE_MEM_ALLOCATOR_H_

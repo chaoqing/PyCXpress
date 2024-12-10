@@ -1,16 +1,19 @@
 
-#ifndef TENSORFLOW_CORE_PLATFORM_ENV_H_
-#define TENSORFLOW_CORE_PLATFORM_ENV_H_
+#ifndef TENSORFLOW_CPY_CORE_PLATFORM_ENV_H_
+#define TENSORFLOW_CPY_CORE_PLATFORM_ENV_H_
 
 #include <stdint.h>
 
 #include <string>
 #include <vector>
 
-#include "tensorflow/core/platform/status.h"
+#include "../../core/platform/status.h"
 
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 /// \brief An interface used by the tensorflow implementation to
 /// access operating system functionality like the filesystem etc.
@@ -118,5 +121,8 @@ int setenv(const char* name, const char* value, int overwrite);
 int unsetenv(const char* name);
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_PLATFORM_ENV_H_
+
+#endif  // TENSORFLOW_CPY_CORE_PLATFORM_ENV_H_

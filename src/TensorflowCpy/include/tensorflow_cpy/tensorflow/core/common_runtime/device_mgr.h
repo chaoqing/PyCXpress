@@ -1,17 +1,19 @@
 
-#ifndef TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_MGR_H_
-#define TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_MGR_H_
+#ifndef TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_MGR_H_
+#define TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_MGR_H_
 
 #include <string>
 #include <vector>
 
-#include "tensorflow/core/framework/device.h"
-#include "tensorflow/core/framework/device_attributes.pb.h"
-#include "tensorflow/core/platform/macros.h"
+#include <tensorflow/core/framework/device_attributes.pb.h>
+#include "../../core/framework/device.h"
+#include "../../core/platform/macros.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
 
-class DeviceAttributes;
+  using namespace ::tensorflow;
 
 // Represents a set of devices.
 class DeviceMgr {
@@ -54,5 +56,8 @@ class DeviceMgr {
 static const size_t kStaleDeviceBufferSize = 8192;
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_COMMON_RUNTIME_DEVICE_MGR_H_
+
+#endif  // TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_MGR_H_

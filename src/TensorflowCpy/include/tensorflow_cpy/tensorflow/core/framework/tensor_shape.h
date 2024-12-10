@@ -1,12 +1,15 @@
-#ifndef TENSORFLOW_CORE_FRAMEWORK_TENSOR_SHAPE_H_
-#define TENSORFLOW_CORE_FRAMEWORK_TENSOR_SHAPE_H_
+#ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_SHAPE_H_
+#define TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_SHAPE_H_
 
 #include <string>
 
-#include "tensorflow/core/platform/status.h"
-#include "tensorflow/core/platform/logging.h"
+#include "../../core/platform/status.h"
+#include "../../core/platform/logging.h"
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 
 // START_SKIP_DOXYGEN
 template <class Shape>
@@ -218,5 +221,8 @@ class TensorShapeUtils {
 
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_FRAMEWORK_TENSOR_SHAPE_H_
+
+#endif  // TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_SHAPE_H_

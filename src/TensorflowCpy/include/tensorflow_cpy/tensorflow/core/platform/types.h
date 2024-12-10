@@ -1,9 +1,11 @@
 
-#ifndef TENSORFLOW_CORE_PLATFORM_TYPES_H_
-#define TENSORFLOW_CORE_PLATFORM_TYPES_H_
+#ifndef TENSORFLOW_CPY_CORE_PLATFORM_TYPES_H_
+#define TENSORFLOW_CPY_CORE_PLATFORM_TYPES_H_
 
 #include <cstdint>
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
 
 typedef signed char int8;
@@ -17,6 +19,7 @@ typedef unsigned int uint32;
 typedef std::uint64_t uint64;
 
 }  // namespace tensorflow
+
 
 namespace tensorflow {
 
@@ -37,5 +40,8 @@ static const int64_t kint64max = static_cast<int64_t>(0x7FFFFFFFFFFFFFFFll);
 typedef uint64 Fprint;
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_PLATFORM_TYPES_H_
+
+#endif  // TENSORFLOW_CPY_CORE_PLATFORM_TYPES_H_

@@ -1,14 +1,17 @@
 
-#ifndef TENSORFLOW_CORE_PLATFORM_LOGGING_H_
-#define TENSORFLOW_CORE_PLATFORM_LOGGING_H_
+#ifndef TENSORFLOW_CPY_CORE_PLATFORM_LOGGING_H_
+#define TENSORFLOW_CPY_CORE_PLATFORM_LOGGING_H_
 
 #include <sstream>
 
-#include "tensorflow/core/platform/macros.h"
+#include "../../core/platform/macros.h"
 
 #undef ERROR
 
+// clang-format off
+namespace tensorflow_cpy {
 namespace tensorflow {
+  using namespace ::tensorflow;
 const int INFO = 0;            // base_logging::INFO;
 const int WARNING = 1;         // base_logging::WARNING;
 const int ERROR = 2;           // base_logging::ERROR;
@@ -52,13 +55,13 @@ class LogMessageNull : public std::basic_ostringstream<char> {
 };
 
 #define _TF_LOG_INFO \
-  ::tensorflow::internal::LogMessage(__FILE__, __LINE__, ::tensorflow::INFO)
+  ::tensorflow_cpy::tensorflow::internal::LogMessage(__FILE__, __LINE__, ::tensorflow_cpy::tensorflow::INFO)
 #define _TF_LOG_WARNING \
-  ::tensorflow::internal::LogMessage(__FILE__, __LINE__, ::tensorflow::WARNING)
+  ::tensorflow_cpy::tensorflow::internal::LogMessage(__FILE__, __LINE__, ::tensorflow_cpy::tensorflow::WARNING)
 #define _TF_LOG_ERROR \
-  ::tensorflow::internal::LogMessage(__FILE__, __LINE__, ::tensorflow::ERROR)
+  ::tensorflow_cpy::tensorflow::internal::LogMessage(__FILE__, __LINE__, ::tensorflow_cpy::tensorflow::ERROR)
 #define _TF_LOG_FATAL \
-  ::tensorflow::internal::LogMessageFatal(__FILE__, __LINE__)
+  ::tensorflow_cpy::tensorflow::internal::LogMessageFatal(__FILE__, __LINE__)
 
 #define _TF_LOG_QFATAL _TF_LOG_FATAL
 
@@ -77,10 +80,10 @@ class LogMessageNull : public std::basic_ostringstream<char> {
 // In optimized mode, use CheckOpString to hint to compiler that
 // the while condition is unlikely.
 //#define CHECK_OP_LOG(name, op, val1, val2)                     \
-  //while (::tensorflow::internal::CheckOpString _result{        \
-      //::tensorflow::internal::name##Impl(                      \
-          //::tensorflow::internal::GetReferenceableValue(val1), \
-          //::tensorflow::internal::GetReferenceableValue(val2), \
+  //while (::tensorflow_cpy::tensorflow::internal::CheckOpString _result{        \
+      //::tensorflow_cpy::tensorflow::internal::name##Impl(                      \
+          //::tensorflow_cpy::tensorflow::internal::GetReferenceableValue(val1), \
+          //::tensorflow_cpy::tensorflow::internal::GetReferenceableValue(val2), \
           //#val1 " " #op " " #val2)})                           \
   //::tensorflow::internal::LogMessageFatal(__FILE__, __LINE__) << *(_result.str_)
 #define CHECK_OP_LOG(name, op, val1, val2)
@@ -95,7 +98,7 @@ class LogMessageNull : public std::basic_ostringstream<char> {
 #define CHECK_GE(val1, val2) CHECK_OP(Check_GE, >=, val1, val2)
 #define CHECK_GT(val1, val2) CHECK_OP(Check_GT, >, val1, val2)
 #define CHECK_NOTNULL(val)                                 \
-  ::tensorflow::internal::CheckNotNull(__FILE__, __LINE__, \
+  ::tensorflow_cpy::tensorflow::internal::CheckNotNull(__FILE__, __LINE__, \
                                        "'" #val "' Must be non NULL", (val))
 
 #ifndef NDEBUG
@@ -170,5 +173,8 @@ void LogString(const char* fname, int line, int severity,
 }  // namespace internal
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_PLATFORM_LOGGING_H_
+
+#endif  // TENSORFLOW_CPY_CORE_PLATFORM_LOGGING_H_

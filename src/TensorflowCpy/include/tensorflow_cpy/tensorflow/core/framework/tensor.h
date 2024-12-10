@@ -1,21 +1,25 @@
-#ifndef TENSORFLOW_CORE_FRAMEWORK_TENSOR_H_
-#define TENSORFLOW_CORE_FRAMEWORK_TENSOR_H_
+#ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_H_
+#define TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_H_
 
 #include <cstdint>
 #include <type_traits>
 
-#include "tensorflow/core/framework/tensor_shape.h"
-#include "tensorflow/core/framework/types.pb.h"
-#include "tensorflow/core/platform/refcount.h"
-#include "tensorflow/core/platform/macros.h"
-#include "tensorflow/core/framework/allocator.h"
+#include <tensorflow/core/framework/types.pb.h>
+#include "../../core/framework/tensor_shape.h"
+#include "../../core/platform/refcount.h"
+#include "../../core/platform/macros.h"
+#include "../../core/framework/allocator.h"
 
 namespace tensorflow {
-
 // Forward declarations.  In particular, we forward declare protos so that their
 // symbols can be removed from .so exports.
 class AllocationDescription;
+}
 
+// clang-format off
+namespace tensorflow_cpy {
+namespace tensorflow {
+  using namespace ::tensorflow;
 /// @ingroup core
 
 /// Interface to access the raw ref-counted data buffer.
@@ -352,5 +356,8 @@ class Tensor {
 };
 
 }  // namespace tensorflow
+}  // namespace tensorflow_cpy
+// clang-format on
 
-#endif  // TENSORFLOW_CORE_FRAMEWORK_TENSOR_H_
+
+#endif  // TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_H_
