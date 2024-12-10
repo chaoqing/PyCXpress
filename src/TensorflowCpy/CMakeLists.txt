@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.14...3.22)
 
 # ---- Project ----
 
-# Note: update this to your new project's name and version
 project(TensorflowCpy LANGUAGES CXX)
 
 set(PROJECT_SNAKE_NAME tensorflow_cpy)
@@ -22,7 +21,7 @@ else()
   if(USE_LIBTENSORFLOW_CC)
     find_package(TensorFlow REQUIRED)
   else()
-    #find_package(Protobuf REQUIRED)
+	  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/proto")
   endif()
 endif()
 
@@ -31,7 +30,9 @@ endif()
 # Note: globbing sources is considered bad practice as CMake's generators may not detect new files
 # automatically. Keep that in mind when changing files, or explicitly mention them here.
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/**/*.h")
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp")
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp"
+)
 
 # ---- Create library ----
 # Note: for header-only libraries change all PUBLIC flags to INTERFACE and create an interface
@@ -53,10 +54,6 @@ else()
     target_include_directories(
       ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/tensorflow_cpy>
     )
-    target_include_directories(
-      ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/../../third_party/protobuf/include>
-    )
-    #target_include_directories(${PROJECT_NAME} PRIVATE ${Protobuf_INCLUDE_DIRS})
   endif()
 endif()
 
@@ -67,6 +64,6 @@ else()
   if(USE_LIBTENSORFLOW_CC)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${TensorFlow_LIBRARIES})
   else()
-    #target_link_libraries(${PROJECT_NAME} PRIVATE ${Protobuf_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE proto-objects)
   endif()
 endif()

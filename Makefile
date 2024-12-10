@@ -68,7 +68,11 @@ CMAKE_OPTIONS :=
 USE_LIBTENSORFLOW_CC := 0
 ifeq ($(USE_LIBTENSORFLOW_CC),1)
 	ifeq ($(CMAKE_OPTIONS),)
-		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/protobuf;$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
+		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
+	endif
+else
+	ifeq ($(CMAKE_OPTIONS),)
+		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/protobuf"
 	endif
 endif
 
@@ -114,12 +118,9 @@ source-all: FORCE
 	$(call message, Source)
 	$(CMAKE) -B build $(CMAKE_OPTIONS)
 
-PROTO_FILES := $(shell env -C $(REPO_DIR)/src/TensorflowCpy/source/ find ./ -type f -name '*.proto')
 source-sample: FORCE
 	$(call message, Source)
 	$(CMAKE) -S sample -B build/sample $(CMAKE_OPTIONS)
-	$(call message, Generating Protobuf)
-	env -C $(REPO_DIR)/src/TensorflowCpy/source/ $(THIRD_PARTY_DIR)/protobuf/bin/protoc --proto_path ./ --cpp_out ../include/tensorflow_cpy/ $(PROTO_FILES)
 
 build-sample: source-sample
 	$(call message, Build)
@@ -131,6 +132,14 @@ doc: FORCE
 	$(call message, GenerateDocs)
 	$(CMAKE) --build build/doc --target GenerateDocs
 
+
+#* Protobuf
+.PHONY: protobuf-install
+protobuf-install:
+	mkdir -p $(THIRD_PARTY_DIR)
+	-env -C $(THIRD_PARTY_DIR) git clone -b v3.9.2 https://github.com/protocolbuffers/protobuf protobuf.src
+	env -C $(THIRD_PARTY_DIR)/protobuf.src cmake -S cmake -B build -DCMAKE_INSTALL_PREFIX=$(THIRD_PARTY_DIR)/protobuf -Dprotobuf_BUILD_TESTS=OFF
+	env -C $(THIRD_PARTY_DIR)/protobuf.src cmake --build build --target install
 
 #* Poetry
 .PHONY: poetry-download
@@ -258,7 +267,6 @@ build-dist:
 .PHONY: build-remove
 build-remove:
 	rm -rf $(REPO_DIR)/dist/
-	find $(REPO_DIR)/src/TensorflowCpy/include/ -name '*.pb.cc' -or -name '*.pb.h' -exec rm {} \;
 	rm -rf $(REPO_DIR)/build/
 
 .PHONY: cleanup
