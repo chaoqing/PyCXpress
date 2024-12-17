@@ -2,6 +2,7 @@
 #ifndef TENSORFLOW_CPY_CORE_PLATFORM_MACROS_H_
 #define TENSORFLOW_CPY_CORE_PLATFORM_MACROS_H_
 
+// clang-format off
 
 // Compiler attributes
 #if (defined(__GNUC__) || defined(__APPLE__)) && !defined(SWIG)
@@ -126,5 +127,7 @@
 #define SE_MUST_USE_RESULT TF_MUST_USE_RESULT
 #define SE_PREDICT_TRUE TF_PREDICT_TRUE
 #define SE_PREDICT_FALSE TF_PREDICT_FALSE
+
+// clang-format on
 
 #endif  // TENSORFLOW_CPY_CORE_PLATFORM_MACROS_H_

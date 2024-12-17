@@ -75,6 +75,7 @@ class StatusOr {
 
  private:
     Status status_;
+    std::unique_ptr<T> value_;
 
  public:
   typedef T element_type;  // DEPRECATED: use `value_type`.
@@ -183,10 +184,10 @@ class StatusOr {
   // warnings about possible uses of the statusor object after the move.
   // C++ style guide waiver for ref-qualified overloads granted in cl/143176389
   // See go/ref-qualifiers for more details on such overloads.
-  const T& ValueOrDie() const&;
-  T& ValueOrDie() &;
-  const T&& ValueOrDie() const&&;
-  T&& ValueOrDie() &&;
+  const T& ValueOrDie() const& {return *value_;}
+  T& ValueOrDie() & {return *value_;}
+  const T&& ValueOrDie() const&& {return std::move(*value_);}
+  T&& ValueOrDie() && {return std::move(*value_);}
 
   // Returns a reference to the current value.
   //

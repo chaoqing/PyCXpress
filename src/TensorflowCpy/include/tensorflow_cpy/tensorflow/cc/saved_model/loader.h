@@ -3,10 +3,11 @@
 #ifndef TENSORFLOW_CPY_CC_SAVED_MODEL_LOADER_H_
 #define TENSORFLOW_CPY_CC_SAVED_MODEL_LOADER_H_
 
+#include <tensorflow/core/protobuf/meta_graph.pb.h>
+
 #include <string>
 #include <unordered_set>
 
-#include <tensorflow/core/protobuf/meta_graph.pb.h>
 #include "../../core/platform/status.h"
 #include "../../core/public/session.h"
 

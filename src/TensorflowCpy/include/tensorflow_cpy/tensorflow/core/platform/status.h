@@ -2,10 +2,11 @@
 #ifndef TENSORFLOW_CPY_CORE_PLATFORM_STATUS_H_
 #define TENSORFLOW_CPY_CORE_PLATFORM_STATUS_H_
 
+#include <tensorflow/core/protobuf/error_codes.pb.h>
+
 #include <iosfwd>
 #include <string>
 
-#include <tensorflow/core/protobuf/error_codes.pb.h>
 #include "../../core/platform/macros.h"
 
 // clang-format off

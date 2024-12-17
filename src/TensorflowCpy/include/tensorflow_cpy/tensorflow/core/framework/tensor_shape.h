@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "../../core/platform/status.h"
 #include "../../core/platform/logging.h"
+#include "../../core/platform/status.h"
 
 // clang-format off
 namespace tensorflow_cpy {

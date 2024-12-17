@@ -3,6 +3,7 @@
 #define TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_DEVICE_ID_UTILS_H_
 
 #include <string>
+
 #include "../../../core/common_runtime/device/device_id.h"
 #include "../../../stream_executor/platform.h"
 

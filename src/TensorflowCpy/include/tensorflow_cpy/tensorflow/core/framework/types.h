@@ -2,11 +2,12 @@
 #ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_TYPES_H_
 #define TENSORFLOW_CPY_CORE_FRAMEWORK_TYPES_H_
 
+#include <tensorflow/core/framework/types.pb.h>
+
 #include <string>
 
-#include <tensorflow/core/framework/types.pb.h>
-#include "../../core/platform/types.h"
 #include "../../core/platform/macros.h"
+#include "../../core/platform/types.h"
 
 // clang-format off
 namespace tensorflow_cpy {

@@ -10,6 +10,7 @@
 #define TENSORFLOW_CPY_STREAM_EXECUTOR_DEVICE_MEMORY_H_
 
 #include <stddef.h>
+
 #include <cstdint>
 
 

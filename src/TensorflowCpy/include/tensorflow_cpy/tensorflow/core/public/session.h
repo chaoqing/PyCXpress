@@ -2,12 +2,12 @@
 #ifndef TENSORFLOW_CPY_CORE_PUBLIC_SESSION_H_
 #define TENSORFLOW_CPY_CORE_PUBLIC_SESSION_H_
 
-#include <string>
-#include <vector>
-
 #include <tensorflow/core/framework/device_attributes.pb.h>
 #include <tensorflow/core/framework/graph.pb.h>
 #include <tensorflow/core/protobuf/config.pb.h>
+
+#include <string>
+#include <vector>
 
 #include "../../core/framework/tensor.h"
 #include "../../core/platform/status.h"

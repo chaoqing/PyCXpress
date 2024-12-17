@@ -1,14 +1,14 @@
 #include <tensorflow_cpy/tensorflow.h>
 
+namespace tensorflow_cpy {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-
-namespace tensorflow_cpy {
     namespace stream_executor {
         bool StreamExecutor::DeviceMemoryUsage(long*, long*) const { return true; }
         const DeviceDescription& StreamExecutor::GetDeviceDescription() const {
             return DeviceDescription::CreateDummy();
         }
+        DeviceDescription::DeviceDescription() {}
         void         StreamExecutor::Deallocate(DeviceMemoryBase*) {}
         port::Status StreamExecutor::SynchronousMemcpyD2H(DeviceMemoryBase const&, long, void*) {
             return port::Status::OK();
@@ -27,15 +27,17 @@ namespace tensorflow_cpy {
 
         SessionOptions::SessionOptions() {}
         namespace internal {
-            // LogMessageFatal::LogMessageFatal(char const*, int) {}
-            // LogMessageFatal::~LogMessageFatal() {}
-        };
+            LogMessageFatal::LogMessageFatal(const char* file, int line)
+                : LogMessage(file, line, FATAL) {}
+            LogMessageFatal::~LogMessageFatal() { exit(1); }
+            LogMessage::LogMessage(const char* file, int line, int severity) {}
+            LogMessage::~LogMessage() {}
+        };  // namespace internal
 
         namespace core {
-            // RefCountDeleter::operator()(RefCounted const*) const{}
-            // RefCounted::RefCounted() {}
-            // RefCounted::Unref() const {}
-        }
+            RefCounted::RefCounted() {}
+            bool RefCounted::Unref() const { return true; }
+        }  // namespace core
 
 
         Env*        Env::Default() { return nullptr; }
@@ -45,19 +47,19 @@ namespace tensorflow_cpy {
 
         std::string AllocatorStats::DebugString() const { return ""; }
         int         DataTypeSize(DataType) { return 0; }
-        // void* DeviceMemAllocator::Alloc(unsigned long, unsigned long, unsigned long*){
-        // return nullptr;
-        // }
-        // void DeviceMemAllocator::Free(void*, unsigned long){}
-        // DeviceMemAllocator::DeviceMemAllocator(se::StreamExecutor*, PlatformDeviceId, bool,
-        // std::vector<std::function<void (void*, int, unsigned long)>,
-        // std::allocator<std::function<void (void*, int, unsigned long)> > > const&,
-        // std::vector<std::function<void (void*, int, unsigned long)>,
-        // std::allocator<std::function<void (void*, int, unsigned long)> > > const&){}
+
+
+        Allocator::~Allocator() {}
         GPUBFCAllocator::GPUBFCAllocator(
             std::unique_ptr<SubAllocator, std::default_delete<SubAllocator> >, unsigned long,
             std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&,
             GPUBFCAllocator::Options const&) {}
+
+        std::string GPUBFCAllocator::Name() { return ""; }
+        void* GPUBFCAllocator::AllocateRaw(size_t alignment, size_t num_bytes) { return nullptr; }
+        void  GPUBFCAllocator::DeallocateRaw(void* ptr) {}
+
+
         Status        ValidateGPUMachineManager() { return Status::OK(); }
         se::Platform* GPUMachineManager() { return nullptr; }
         std::string   GpuPlatformName() { return ""; }
@@ -87,6 +89,7 @@ namespace tensorflow_cpy {
         void SubAllocator::VisitAlloc(void*, int, unsigned long) {}
         void SubAllocator::VisitFree(void*, int, unsigned long) {}
 
+        TensorShape::TensorShape() {}
         void    TensorShape::AddDim(long) {}
         int     TensorShape::dims() const { return 0; }
         int64_t TensorShape::dim_size(int) const { return 0; }
@@ -100,5 +103,5 @@ namespace tensorflow_cpy {
         Tensor::Tensor(DataType, TensorShape const&, TensorBuffer*) {}
         size_t Tensor::TotalBytes() const { return 0; }
     };  // namespace tensorflow
-};  // namespace tensorflow_cpy
 #pragma GCC diagnostic pop
+};  // namespace tensorflow_cpy

@@ -1,8 +1,9 @@
 #ifndef TENSORFLOW_CPY_PUBLIC_SESSION_OPTIONS_H_
 #define TENSORFLOW_CPY_PUBLIC_SESSION_OPTIONS_H_
 
-#include <string>
 #include <tensorflow/core/protobuf/config.pb.h>
+
+#include <string>
 
 // clang-format off
 namespace tensorflow_cpy {

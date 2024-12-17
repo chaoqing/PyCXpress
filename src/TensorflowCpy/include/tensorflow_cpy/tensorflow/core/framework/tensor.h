@@ -1,20 +1,21 @@
 #ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_H_
 #define TENSORFLOW_CPY_CORE_FRAMEWORK_TENSOR_H_
 
+#include <tensorflow/core/framework/types.pb.h>
+
 #include <cstdint>
 #include <type_traits>
 
-#include <tensorflow/core/framework/types.pb.h>
-#include "../../core/framework/tensor_shape.h"
-#include "../../core/platform/refcount.h"
-#include "../../core/platform/macros.h"
 #include "../../core/framework/allocator.h"
+#include "../../core/framework/tensor_shape.h"
+#include "../../core/platform/macros.h"
+#include "../../core/platform/refcount.h"
 
 namespace tensorflow {
-// Forward declarations.  In particular, we forward declare protos so that their
-// symbols can be removed from .so exports.
-class AllocationDescription;
-}
+    // Forward declarations.  In particular, we forward declare protos so that their
+    // symbols can be removed from .so exports.
+    class AllocationDescription;
+}  // namespace tensorflow
 
 // clang-format off
 namespace tensorflow_cpy {
@@ -46,7 +47,7 @@ class TensorBuffer : public core::RefCounted {
   virtual void FillAllocationDescription(
       AllocationDescription* proto) const = 0;
 
-  virtual bool GetAllocatedBytes(size_t* out_bytes) const;
+  //virtual bool GetAllocatedBytes(size_t* out_bytes) const;
 
   /// \brief Helper method to reinterpret the buffer as an array of `T`.
   template <typename T>
@@ -337,7 +338,7 @@ class Tensor {
   /// not get destroyed while the `StringPiece` is still used.
   ///
   /// REQUIRES: `DataTypeCanUseMemcpy(dtype())`.
-  void* data() const;
+  void* data() const { return buf_->data(); }
 
 
   // Returns true if the refcount on buf_ and any possible underlying root

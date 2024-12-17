@@ -15,9 +15,10 @@
 #ifndef TENSORFLOW_CPY_CORE_FRAMEWORK_DEVICE_H_
 #define TENSORFLOW_CPY_CORE_FRAMEWORK_DEVICE_H_
 
+#include <tensorflow/core/framework/device_attributes.pb.h>
+
 #include <string>
 
-#include <tensorflow/core/framework/device_attributes.pb.h>
 #include "../../core/framework/allocator.h"
 #include "../../core/platform/env.h"
 #include "../../core/platform/status.h"

@@ -2,10 +2,11 @@
 #ifndef TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_MGR_H_
 #define TENSORFLOW_CPY_CORE_COMMON_RUNTIME_DEVICE_MGR_H_
 
+#include <tensorflow/core/framework/device_attributes.pb.h>
+
 #include <string>
 #include <vector>
 
-#include <tensorflow/core/framework/device_attributes.pb.h>
 #include "../../core/framework/device.h"
 #include "../../core/platform/macros.h"
 
