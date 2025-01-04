@@ -18,6 +18,8 @@ void wait_for_debugger_attach() {
 }
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-warning-option"
+
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wdeprecated-builtins"
@@ -49,10 +51,9 @@ namespace se = tensorflow_cpy::stream_executor;
 #    include <tensorflow/core/framework/tensor.h>
 #    include <tensorflow/core/framework/types.h>
 #    include <tensorflow/core/platform/env.h>
+#    include <tensorflow/core/platform/types.h>
 #    include <tensorflow/core/public/session.h>
 #    include <tensorflow/core/util/stream_executor_util.h>
-
-#    include "tensorflow/core/platform/types.h"
 
 namespace tf = tensorflow;
 namespace se = stream_executor;
@@ -89,6 +90,7 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
     if (argc == 0) {
         return 1;
     }
+    std::string model_path(argv[1]);
 
     // configure session
     tf::SessionOptions sessionOption;
@@ -138,7 +140,6 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
 
     // load model
     tf::SavedModelBundle model;
-    std::string          model_path(argv[1]);
     auto status = tf::LoadSavedModel(sessionOption, runOption, model_path, {"serve"}, &model);
     if (!status.ok()) {
         std::cerr << status.ToString() << std::endl;

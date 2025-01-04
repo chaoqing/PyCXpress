@@ -47,7 +47,7 @@ example-pycxpress:
 
 example-graph: ./sample/saved_model/saved_model.pb
 ./sample/saved_model/saved_model.pb: ./sample/main.py
-	env -C $(THIS_MAKEFILE_DIR)/sample $(PYTHON) main.py
+	env -C $(THIS_MAKEFILE_DIR)/sample --unset=LD_LIBRARY_PATH $(PYTHON) main.py
 
 example-tensorflow: build-sample example-graph
 	$(call message, Run ./build/sample/sample)
@@ -75,6 +75,7 @@ else
 		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/protobuf"
 	endif
 endif
+CMAKE_OPTIONS += -DUSE_LIBTENSORFLOW_CC=$(USE_LIBTENSORFLOW_CC)
 
 ifneq ($(TYPE),)
   BUILD_TYPE_R := Release
@@ -195,9 +196,11 @@ format-cpp:
 #[Format.$(CMAKE)](https://github.com/TheLartians/Format.cmake)
 format-cmake:
 	$(call message, Source CMAKE)
-	$(CMAKE) -S tests -B build/tests $(CMAKE_OPTIONS)
+	$(CMAKE) -B build $(CMAKE_OPTIONS)
 	$(call message, Format)
 	$(CMAKE) --build build --target fix-format
+	$(call message, Revert back all those tensorflow proto changes because of clang-format bug)
+	-git checkout src/TensorflowCpy/proto/tensorflow/
 
 #* Linting
 .PHONY: test test-pycxpress test-tfcpy
@@ -277,5 +280,6 @@ cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove 
 distclean: cleanup
 	rm -rf $(REPO_DIR)/dist/
 	rm -rf $(REPO_DIR)/build/
+	rm -rf $(REPO_DIR)/sample/frozen_graph $(REPO_DIR)/sample/saved_model
 
 FORCE:

@@ -63,13 +63,13 @@ auto main(int argc, char** argv) -> int {
 
     std::string name;
 
-    // clang-format off
-  options.add_options()
-    ("h,help", "Show help")
-    ("v,version", "Print the current version number")
-    ("n,name", "Name to greet", cxxopts::value(name)->default_value("whole_flow"))
-  ;
-    // clang-format on
+    options.add_options()
+        // clang-format off
+        ("h,help", "Show help")
+        ("v,version", "Print the current version number")
+        ("n,name", "Name to greet", cxxopts::value(name)->default_value("whole_flow"))
+        // clang-format on
+        ;
 
     auto result = options.parse(argc, argv);
 
