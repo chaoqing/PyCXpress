@@ -9,9 +9,9 @@
 #include <string>
 #include <vector>
 
+#include "../../core/common_runtime/device_mgr.h"
 #include "../../core/framework/tensor.h"
 #include "../../core/platform/status.h"
-#include "../../core/common_runtime/device_mgr.h"
 #include "../../core/public/session_options.h"
 
 // clang-format off

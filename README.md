@@ -76,6 +76,13 @@ install-cmake:
   make install
 ```
 
+Use following commands to start build and test
+
+```sh
+make distclean source-all example-tensorflow TYPE=D USE_LIBTENSORFLOW_CC=0
+gdb --tui -q --args ./build/sample/sample --name whole_flow -- ./sample/saved_model/
+```
+
 ## 🛡 License
 
 [![License](https://img.shields.io/github/license/chaoqing/PyCXpress)](https://github.com/chaoqing/PyCXpress/blob/master/LICENSE)

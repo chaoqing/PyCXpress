@@ -17,12 +17,31 @@ namespace errors {
 typedef ::tensorflow::error::Code Code;
 
 }  // namespace errors
+
+struct SourceLocation {
+  uint32_t line;
+  const char* file_name;
+
+  static SourceLocation current(uint32_t line = 0,
+                                const char* file_name = nullptr) {
+    SourceLocation loc;
+    loc.line = line;
+    loc.file_name = file_name;
+    return loc;
+  }
+};
+
 /// @ingroup core
 /// Denotes success or failure of a call in Tensorflow.
 class Status {
  public:
   /// Create a success status.
   Status() {}
+
+  /// \brief Create a status with the specified error code and msg as a
+  /// human-readable string containing more detailed information.
+  Status(error::Code code, std::string_view msg,
+         SourceLocation loc = SourceLocation::current());
 
   /// Copy the specified status.
   Status(const Status& s);
@@ -54,6 +73,9 @@ class Status {
   void IgnoreError() const;
 
  private:
+  error::Code m_code = error::Code::OK;
+  //std::string_view _msg;
+  //SourceLocation _loc;
 };
 
 // OkStatus()

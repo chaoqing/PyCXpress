@@ -271,55 +271,12 @@ class Tensor {
     return true;
   }
 
-  /// \brief Slice this tensor along the 1st dimension.
-
-  /// I.e., the returned tensor satisfies
-  ///     returned[i, ...] == this[dim0_start + i, ...].
-  /// The returned tensor shares the underlying tensor buffer with this
-  /// tensor.
-  ///
-  /// NOTE: The returned tensor may not satisfy the same alignment
-  /// requirement as this tensor depending on the shape. The caller
-  /// must check the returned tensor's alignment before calling certain
-  /// methods that have alignment requirement (e.g., `flat()`, `tensor()`).
-  ///
-  /// NOTE: When fed with an N-dimensional tensor, this method returns a tensor
-  /// also with N dimensions. If you want to select a sub tensor, see SubSlice.
-  ///
-  /// REQUIRES: `dims()` >= 1
-  /// REQUIRES: `0 <= dim0_start <= dim0_limit <= dim_size(0)`
-  Tensor Slice(int64_t dim0_start, int64_t dim0_limit) const;
-
-  /// \brief Select a subslice from this tensor along the 1st dimension.
-  ///
-  /// When fed with an N-dimensional tensor, this method returns a tensor with
-  /// N-1 dimensions, where the returned tensor is a subslice of the input
-  /// tensor along the first dimension. The N-1 dimensions of the returned
-  /// tensor are the last N-1 dimensions of the input tensor.
-  ///
-  /// NOTE: The returned tensor may not satisfy the same alignment
-  /// requirement as this tensor depending on the shape. The caller
-  /// must check the returned tensor's alignment before calling certain
-  /// methods that have alignment requirement (e.g., `flat()`, `tensor()`).
-  ///
-  /// REQUIRES: `dims()` >= 1
-  /// REQUIRES: `0 <= index < dim_size(0)`
-  Tensor SubSlice(int64_t index) const;
-
-  /// Render the first `max_entries` values in `*this` into a string.
-  std::string SummarizeValue(int64_t max_entries, bool print_v2 = false) const;
-
   /// A human-readable summary of the tensor suitable for debugging.
   // `num_values` is the number of actual data values in the tensor
   // included in the message. If the tensor might be resident in
   // GPU/TPU memory use DeviceSafeDebugString instead.
   std::string DebugString(int num_values) const;
   std::string DebugString() const { return DebugString(3); }
-
-  // Variant of DebugString() that should be used for possibly non-CPU tensors.
-  // If the tensor is not resident on CPU, we can't read its values as
-  // DebugString() does.
-  std::string DeviceSafeDebugString() const;
 
   /// \brief Returns a `StringPiece` mapping the current tensor's buffer.
   ///
