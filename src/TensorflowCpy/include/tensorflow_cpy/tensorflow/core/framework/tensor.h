@@ -247,13 +247,7 @@ class Tensor {
 
   /// Returns true iff this tensor is aligned.
   bool IsAligned() const {
-#if EIGEN_MAX_ALIGN_BYTES == 0
     return true;
-#else
-    void* ptr = base<void>();
-    return dtype() == DT_STRING || NumElements() == 0 ||
-           (reinterpret_cast<intptr_t>(ptr) % EIGEN_MAX_ALIGN_BYTES == 0);
-#endif
   }
 
   /// Assign operator. This tensor shares other's underlying storage.

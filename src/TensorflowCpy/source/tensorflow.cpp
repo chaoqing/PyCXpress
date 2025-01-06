@@ -6,10 +6,10 @@ namespace tensorflow_cpy {
     namespace stream_executor {
         bool StreamExecutor::DeviceMemoryUsage(long*, long*) const { return true; }
         const DeviceDescription& StreamExecutor::GetDeviceDescription() const {
-            return DeviceDescription::CreateDummy();
+          static DeviceDescription dummy;
+            return dummy;
         }
         DeviceDescription::DeviceDescription() {}
-        void         StreamExecutor::Deallocate(DeviceMemoryBase*) {}
         port::Status StreamExecutor::SynchronousMemcpyD2H(DeviceMemoryBase const&, long, void*) {
             return port::Status::OK();
         }
@@ -19,8 +19,6 @@ namespace tensorflow_cpy {
         port::Status StreamExecutor::SynchronousMemSet(DeviceMemoryBase*, int, unsigned long) {
             return port::Status::OK();
         }
-        void* StreamExecutor::UnifiedMemoryAllocate(unsigned long) { return nullptr; }
-        void  StreamExecutor::UnifiedMemoryDeallocate(void*) {}
     };  // namespace stream_executor
     namespace tensorflow {
         namespace se = stream_executor;
@@ -76,7 +74,6 @@ namespace tensorflow_cpy {
             return null;
         }
 
-        void        Status::Update(const Status& new_status) {}
         void        Status::IgnoreError() const {}
         bool        Status::ok() const { return true; }
         Status&     Status::operator=(Status const&) { return *this; }

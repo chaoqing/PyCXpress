@@ -11,15 +11,13 @@
 
 #include "../../core/framework/tensor.h"
 #include "../../core/platform/status.h"
+#include "../../core/common_runtime/device_mgr.h"
 #include "../../core/public/session_options.h"
 
 // clang-format off
 namespace tensorflow_cpy {
 namespace tensorflow {
   using namespace ::tensorflow;
-
-class DeviceMgr;
-
 
 /// \brief A Session instance lets a caller drive a TensorFlow graph
 /// computation.
@@ -82,19 +80,6 @@ class Session {
   /// graph. To re-use the session with a different graph, the caller
   /// must Close() the session first.
   virtual Status Create(const GraphDef& graph) = 0;
-#ifndef SWIG
-  virtual Status Create(GraphDef&& graph) { return Create(graph); }
-#endif
-
-  /// \brief Adds operations to the graph that is already registered with the
-  /// Session.
-  ///
-  /// The names of new operations in "graph" must not exist in the
-  /// graph that is already registered.
-  virtual Status Extend(const GraphDef& graph) = 0;
-#ifndef SWIG
-  virtual Status Extend(GraphDef&& graph) { return Extend(graph); }
-#endif
 
   /// \brief Runs the graph with the provided input tensors and fills
   /// `outputs` for the endpoints specified in `output_tensor_names`.
@@ -119,44 +104,6 @@ class Session {
                      const std::vector<std::string>& output_tensor_names,
                      const std::vector<std::string>& target_tensor_names,
                      std::vector<Tensor>* outputs) = 0;
-
-  /// \brief Implementations which support `RunOptions`.
-  //
-  /// NOTE: This API is still experimental and may change.
-  virtual Status Create(const RunOptions& run_options, const GraphDef& graph) ;
-  virtual Status Extend(const RunOptions& run_options, const GraphDef& graph) ;
-  virtual Status Close(const RunOptions& run_options) ;
-  /// \brief Like `Run`, but allows users to pass in a `RunOptions` proto and
-  /// to retrieve non-Tensor metadata output via a `RunMetadata` proto for this
-  /// step.  `run_metadata` may be nullptr, in which case any metadata output is
-  /// discarded.
-  /// NOTE: This API is still experimental and may change.
-  virtual Status Run(const RunOptions& run_options,
-                     const std::vector<std::pair<std::string, Tensor> >& inputs,
-                     const std::vector<std::string>& output_tensor_names,
-                     const std::vector<std::string>& target_tensor_names,
-                     std::vector<Tensor>* outputs, RunMetadata* run_metadata);
-
-
-  /// \brief Sets up a graph for partial execution. All future feeds and
-  /// fetches are specified by `input_names` and `output_names`. Returns
-  /// `handle` that can be used to perform a sequence of partial feeds and
-  /// fetches.
-  /// NOTE: This API is still experimental and may change.
-  virtual Status PRunSetup(const std::vector<std::string>& input_names,
-                           const std::vector<std::string>& output_names,
-                           const std::vector<std::string>& target_nodes,
-                           std::string* handle);
-
-  /// \brief Continues the pending execution specified by `handle` with the
-  /// provided input tensors and fills `outputs` for the endpoints specified
-  /// in `output_names`.
-  /// NOTE: This API is still experimental and may change.
-  virtual Status PRun(
-      const std::string& handle,
-      const std::vector<std::pair<std::string, Tensor> >& inputs,
-      const std::vector<std::string>& output_names,
-      std::vector<Tensor>* outputs);
 
   /// \brief List devices in the session.
   ///
@@ -200,7 +147,6 @@ class Session {
                              std::vector<Tensor>* fetch_tensors,
                              RunMetadata* run_metadata) ;
 
-
   /// \brief Releases resources associated with the given `handle` in this
   /// session.
   /// NOTE: This API is still experimental and may change.
@@ -234,34 +180,6 @@ class Session {
 /// `*out_session`, and this function will return `OK()`. Otherwise, this
 /// function will return an error status and set *out_session to nullptr.
 Status NewSession(const SessionOptions& options, Session** out_session);
-
-/// \brief Resets resource containers associated with a target.
-///
-/// Reset() allows misbehaving or slow sessions to be aborted and closed, and
-/// causes their resources eventually to be released.  Reset() does not wait
-/// for the computations in old sessions to cease; it merely starts the
-/// process of tearing them down.  However, if a new session is started after
-/// a Reset(), the new session is isolated from changes that old sessions
-/// (started prior to the Reset()) may continue to make to resources, provided
-/// all those resources are in containers listed in "containers".
-///
-/// Old sessions may continue to have side-effects on resources not in
-/// containers listed in "containers", and thus may affect future
-/// sessions' results in ways that are hard to predict.  Thus, if well-defined
-/// behavior is desired, it is recommended that all containers be listed in
-/// "containers".
-///
-/// `containers` is a vector of string representation of resource container
-/// names. When a resource container is reset, the resources held by the
-/// container will be released. In particular, all Variables in the container
-/// will become undefined.  If the "containers" vector is empty, the default
-/// container is assumed.  If the "containers" vector is non-empty, the
-/// default container should be listed explicitly.
-///
-/// If Reset succeeds, this function will return `OK()`. Otherwise, this
-/// function will return an error status.
-Status Reset(const SessionOptions& options,
-             const std::vector<std::string>& containers);
 
 /// \brief Create a new session with the given options.
 ///

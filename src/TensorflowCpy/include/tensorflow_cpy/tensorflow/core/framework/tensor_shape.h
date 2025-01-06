@@ -43,54 +43,22 @@ class TensorShape {
   /// defined.
   int64_t num_elements() const ;
 
-  /// Returns `true` iff this is a valid tensor shape.
-  bool IsValid();
-
   /// \brief Add a dimension to the end ("inner-most").
   /// REQUIRES: `size >= 0`
   void AddDim(int64_t size);
 
-  /// Same as `AddDim` but returns a `Status`.
-  /// Use if unsure is `size >= 0`, to prevent `CHECK`-crashes.
-  Status AddDimWithStatus(int64_t size);
-
   /// Appends all the dimensions from `shape`.
   void AppendShape(const TensorShape& shape);
-
-  /// Same as `RemoveDim` but returns a `Status`.
-  /// Use if you cannot validate all invariants, to prevent `CHECK`-fail.
-  Status AppendShapeWithStatus(const TensorShape& shape);
 
   /// \brief Insert a dimension somewhere in the `TensorShape`.
   /// REQUIRES: `0 <= d <= dims()`
   /// REQUIRES: `size >= 0`
   void InsertDim(int d, int64_t size);
 
-  /// Same as `InsertDim` but returns a `Status`.
-  /// Use if unsure if requirements in `InsertDim` are satistified, to prevent
-  /// `CHECK`-fail crashes.
-  Status InsertDimWithStatus(int d, int64_t size);
-
   /// \brief Modifies the size of the dimension `d` to be `size`
   /// REQUIRES: `0 <= d < dims()`
   /// REQUIRES: `size >= 0`
   void set_dim(int d, int64_t size);
-
-  /// Same as `set_dim` but returns a `Status`.
-  /// Use if unsure if requirements in `set_dim` are satistified, to prevent
-  /// `CHECK`-fail crashes.
-  Status SetDimWithStatus(int d, int64_t size);
-
-  /// \brief Removes dimension `d` from the `TensorShape`.
-  /// REQUIRES: `0 <= d < dims()`
-  void RemoveDim(int d) {
-    CHECK_GE(d, 0);
-    RemoveDimRange(d, d + 1);
-  }
-
-  /// Same as `RemoveDim` but returns a `Status`.
-  /// Use if unsure is `0 <= d < dims()`, to prevent `CHECK`-crashes.
-  Status RemoveDimWithStatus(int64_t d) ;
 
   /// \brief Removes last `n` dimensions from the `TensorShape`.
   /// REQUIRES: `0 <= n <= dims()`
@@ -99,10 +67,6 @@ class TensorShape {
     RemoveDimRange(dims() - n, dims());
   }
 
-  /// Same as `RemoveLastDims` but returns a `Status`.
-  /// Use if unsure is `0 <= n <= dims()`, to prevent `CHECK`-crashes.
-  Status RemoveLastDimsWithStatus(int64_t n) ;
-
   /// \brief Removes the dimensions in range `[begin:end)` from `TensorShape`.
   /// Negative values of `end` are interpreted as `dims() + end + 1` (as in
   /// Python). The same is true for negative values of `begin`.
@@ -110,30 +74,13 @@ class TensorShape {
   /// REQUIRES: `-(dims()+1) <= end <= dims()`
   void RemoveDimRange(int begin, int end);
 
-  /// Same as `RemoveDimRange` but returns a `Status`.
-  /// Use if unsure if requirements in `RemoveDimRange` are satistified, to
-  /// prevent `CHECK`-fail crashes.
-  Status RemoveDimRangeWithStatus(int begin, int end);
-
-  /// Return whether the rank is unknown
-  bool unknown_rank() const ;
-
   /// Return the number of dimensions in the tensor.
   /// Can be -1 meaning unknown rank for PartialTensorShape.
   int dims() const ;
 
   /// \brief Returns the number of elements in dimension `d`.
   /// REQUIRES: `0 <= d < dims()`
-  // TODO(touts): Rename to `dimension()` to match
-  // `Eigen::Tensor::dimension()`?
   int64_t dim_size(int d) const;
-
-  /// Return true iff the rank and all of the dimensions are well defined
-  // TODO(irving): Rename to is_fully_defined now that it's fast.
-  bool IsFullyDefined() const ;
-
-  /// For error messages.
-  std::string DebugString() const;
 
   /// For iterating through the dimensions.
   TensorShapeIter<TensorShape> begin() const;
@@ -149,11 +96,6 @@ class TensorShape {
   // For access to TensorShapeBase(DataType).
   friend class Tensor;
 };
-
-/// Outputs `TensorShapeBase` to `std::ostream`.
-inline std::ostream& operator<<(std::ostream& os, const TensorShape& ts) {
-  return os << ts.DebugString();
-}
 
 /// Represents the value of one dimension in a TensorShape.
 struct TensorShapeDim {

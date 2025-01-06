@@ -25,10 +25,6 @@ class OpRegistry {
   OpRegistry();
   ~OpRegistry();
 
-  // Returns ASCII-format OpList for all registered OpDefs (except
-  // those with names starting with '_' if include_internal == false).
-  std::string DebugString(bool include_internal) const;
-
   // A singleton available at startup.
   static OpRegistry* Global();
 
@@ -43,9 +39,6 @@ class OpRegistry {
   // calls to Export, LookUp, ProcessRegistrations and DebugString are processed
   // immediately. Call this to defer future registrations.
   void DeferRegistrations();
-
-  // Clear the registrations that have been deferred.
-  void ClearDeferredRegistrations();
 
  private:
 };

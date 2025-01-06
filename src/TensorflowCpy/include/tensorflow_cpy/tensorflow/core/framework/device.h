@@ -34,7 +34,6 @@ class DeviceBase {
 
   Env* env() const { return env_; }
 
-
   // Return the Allocator implementation to use based on the allocator
   // attributes requested.  See allocator.h for more details.
   virtual Allocator* GetAllocator(AllocatorAttributes /*attr*/) {
@@ -53,15 +52,12 @@ class DeviceBase {
 
 class Device : public DeviceBase {
  public:
-  // Callback type that takes a Status and returns void.
-  typedef std::function<void(const Status&)> DoneCallback;
 
   Device(Env* env, const DeviceAttributes& device_attributes);
   ~Device() override;
 
   // Full name of this device (see top comment).
   const std::string& name() const override { return device_attributes_.name(); }
-
 
   // Describes what kind of device this is.  This is intended to be
   // human-readable and not computer-parsed, except that two devices
@@ -75,12 +71,6 @@ class Device : public DeviceBase {
   const DeviceAttributes& attributes() const override {
     return device_attributes_;
   }
-
-  // Summarizes the status of this Device, for debugging.
-  std::string DebugString() const { return device_attributes_.DebugString(); }
-
-
-  virtual bool IsLocal() const { return true; }
 
  protected:
  private:

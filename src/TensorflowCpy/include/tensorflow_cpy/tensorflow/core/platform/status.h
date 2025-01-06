@@ -7,17 +7,10 @@
 #include <iosfwd>
 #include <string>
 
-#include "../../core/platform/macros.h"
-
 // clang-format off
 namespace tensorflow_cpy {
 namespace tensorflow {
   using namespace ::tensorflow;
-
-#if defined(__clang__)
-// Only clang supports warn_unused_result as a type annotation.
-class TF_MUST_USE_RESULT Status;
-#endif
 
 namespace errors {
 
@@ -45,20 +38,6 @@ class Status {
 
   const std::string& error_message() const ;
 
-  bool operator==(const Status& x) const;
-  bool operator!=(const Status& x) const;
-
-  /// \brief If `ok()`, stores `new_status` into `*this`.  If `!ok()`,
-  /// preserves the current status, but may augment with additional
-  /// information about `new_status`.
-  ///
-  /// Convenient way of keeping track of the first error encountered.
-  /// Instead of:
-  ///   `if (overall_status.ok()) overall_status = new_status`
-  /// Use:
-  ///   `overall_status.Update(new_status);`
-  void Update(const Status& new_status);
-
   /// \brief Return a string representation of this status suitable for
   /// printing. Returns the string `"OK"` for success.
   ///
@@ -83,37 +62,8 @@ class Status {
 // usage of `OkStatus()` when constructing such an OK status.
 Status OkStatus();
 
-
-
 /// @ingroup core
 std::ostream& operator<<(std::ostream& os, const Status& x);
-
-
-std::string error_name(errors::Code code);
-
-/*
-inline std::string* TfCheckOpHelper(::tensorflow::Status v,
-                                           const char* msg) {
-  if (v.ok()) return nullptr;
-  return &(v.error_message());
-}
-
-#define TF_DO_CHECK_OK(val, level)                                \
-  while (auto _result = ::tensorflow::TfCheckOpHelper(val, #val)) \
-  LOG(level) << *(_result)
-
-#define TF_CHECK_OK(val) TF_DO_CHECK_OK(val, FATAL)
-#define TF_QCHECK_OK(val) TF_DO_CHECK_OK(val, QFATAL)
-
-// DEBUG only version of TF_CHECK_OK.  Compiler still parses 'val' even in opt
-// mode.
-#ifndef NDEBUG
-#define TF_DCHECK_OK(val) TF_CHECK_OK(val)
-#else
-#define TF_DCHECK_OK(val) \
-  while (false && (::tensorflow::OkStatus() == (val))) LOG(FATAL)
-#endif
-*/
 
 }  // namespace tensorflow
 }  // namespace tensorflow_cpy

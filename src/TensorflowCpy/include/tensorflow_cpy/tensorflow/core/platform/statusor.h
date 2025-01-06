@@ -97,14 +97,6 @@ class StatusOr {
   StatusOr(StatusOr&&) = default;
   StatusOr& operator=(StatusOr&&) = default;
 
-  // Conversion copy/move constructor, T must be convertible from U.
-  template <typename U, typename std::enable_if<
-                            std::is_convertible<U, T>::value>::type* = nullptr>
-  StatusOr(const StatusOr<U>& other);
-  template <typename U, typename std::enable_if<
-                            std::is_convertible<U, T>::value>::type* = nullptr>
-  StatusOr(StatusOr<U>&& other);
-
   // Conversion copy/move assignment operator, T must be convertible from U.
   template <typename U, typename std::enable_if<
                             std::is_convertible<U, T>::value>::type* = nullptr>
@@ -188,27 +180,6 @@ class StatusOr {
   T& ValueOrDie() & {return *value_;}
   const T&& ValueOrDie() const&& {return std::move(*value_);}
   T&& ValueOrDie() && {return std::move(*value_);}
-
-  // Returns a reference to the current value.
-  //
-  // REQUIRES: this->ok() == true, otherwise the behavior is undefined.
-  //
-  // Use this->ok() or `operator bool()` to verify that there is a current
-  // value. Alternatively, see ValueOrDie() for a similar API that guarantees
-  // CHECK-failing if there is no current value.
-  const T& operator*() const&;
-  T& operator*() &;
-  const T&& operator*() const&&;
-  T&& operator*() &&;
-
-  // Returns a pointer to the current value.
-  //
-  // REQUIRES: this->ok() == true, otherwise the behavior is undefined.
-  //
-  // Use this->ok() or `operator bool()` to verify that there is a current
-  // value.
-  const T* operator->() const;
-  T* operator->();
 
   // Ignores any errors. This method does nothing except potentially suppress
   // complaints from any tools that are checking that errors are not dropped on

@@ -23,11 +23,6 @@ class DeviceIdUtil {
       se::Platform* device_manager, PlatformDeviceId platform_device_id) {
     return device_manager->ExecutorForDevice(platform_device_id.value());
   }
-
-  // Parse `visible_device_list` into a list of platform Device ids.
-  static Status ParseVisibleDeviceList(
-      const std::string& visible_device_list, const int visible_device_count,
-      std::vector<PlatformDeviceId>* visible_device_order) ;
 };
 
 }  // namespace tensorflow

@@ -36,11 +36,13 @@ class DeviceMemAllocator : public SubAllocator {
     void* ptr = nullptr;
     *bytes_received = num_bytes;
     if (num_bytes > 0) {
+      /*
       if (use_unified_memory_) {
         ptr = stream_exec_->UnifiedMemoryAllocate(num_bytes);
       } else {
         ptr = stream_exec_->AllocateArray<char>(num_bytes).opaque();
       }
+      */
       VisitAlloc(ptr, device_id_.value(), num_bytes);
     }
     return ptr;
@@ -49,16 +51,16 @@ class DeviceMemAllocator : public SubAllocator {
   void Free(void* ptr, size_t num_bytes) override {
     if (ptr != nullptr) {
       VisitFree(ptr, device_id_.value(), num_bytes);
+      /*
       if (use_unified_memory_) {
         stream_exec_->UnifiedMemoryDeallocate(ptr);
       } else {
         se::DeviceMemoryBase device_ptr(ptr);
         stream_exec_->Deallocate(&device_ptr);
       }
+      */
     }
   }
-
-  bool SupportsCoalescing() const override { return false; }
 
   AllocatorMemoryType GetMemoryType() const override {
     return AllocatorMemoryType::kDevice;

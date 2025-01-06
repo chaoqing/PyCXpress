@@ -14,8 +14,6 @@ namespace tensorflow_cpy {
 namespace tensorflow {
   using namespace ::tensorflow;
 
-class Variant;
-
 // MemoryType is used to describe whether input or output Tensors of
 // an OpKernel should reside in "Host memory" (e.g., CPU memory) or
 // "Device" Memory (CPU memory for CPU devices, GPU memory for GPU
@@ -32,29 +30,17 @@ class DeviceType {
   DeviceType(const char* type)  // NOLINT(runtime/explicit)
       : type_(type) {}
 
-  //explicit DeviceType(StringPiece type) : type_(type.data(), type.size()) {}
-
   const char* type() const { return type_.c_str(); }
   const std::string& type_string() const { return type_; }
-
-  bool operator<(const DeviceType& other) const;
-  bool operator==(const DeviceType& other) const;
-  bool operator!=(const DeviceType& other) const { return !(*this == other); }
 
  private:
   std::string type_;
 };
-std::ostream& operator<<(std::ostream& os, const DeviceType& d);
 
 // Convenient constants that can be passed to a DeviceType constructor
 TF_EXPORT extern const char* const DEVICE_DEFAULT;     // "DEFAULT"
 TF_EXPORT extern const char* const DEVICE_CPU;         // "CPU"
 TF_EXPORT extern const char* const DEVICE_GPU;         // "GPU"
-TF_EXPORT extern const char* const DEVICE_TPU;         // "TPU"
-TF_EXPORT extern const char* const DEVICE_TPU_SYSTEM;  // "TPU_SYSTEM"
-
-template <typename Device>
-struct DeviceName {};
 
 
 // DataTypeToEnum<T>::v() and DataTypeToEnum<T>::value are the DataType
