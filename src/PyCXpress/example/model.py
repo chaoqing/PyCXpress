@@ -5,6 +5,8 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
+if __name__ != "__main__":
+    logging.debug(f"Importing started")
 
 import sys
 from contextlib import nullcontext
@@ -138,3 +140,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+else:
+    logging.debug(f"Importing completed")

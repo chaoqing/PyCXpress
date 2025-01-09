@@ -18,6 +18,8 @@ POETRY := poetry
 PYTHON := $(POETRY) run python3
 PYTHONPATH := $(REPO_DIR)/src
 CMAKE := cmake
+TYPE ?= D
+USE_LIBTENSORFLOW_CC ?= 0
 
 ENVS := CC=clang CXX=clang++
 ENVS += CPM_SOURCE_CACHE=$(CPM_SOURCE_CACHE)
@@ -42,8 +44,8 @@ endef
 #*             QUICK COMMANDS            *#
 #*****************************************#
 .PHONY: example example-pycxpress example-tensorflow
-example-pycxpress:
-	env -C $(REPO_DIR)/src/PyCXpress/example $(POETRY) run make run
+example-pycxpress: build-example
+	@env TF_CPP_MIN_LOG_LEVEL=2 PYTHONPATH=$(THIS_MAKEFILE_DIR)/src/PyCXpress/example $(THIS_MAKEFILE_DIR)/build/example/example
 
 example-graph: ./sample/saved_model/saved_model.pb
 ./sample/saved_model/saved_model.pb: ./sample/main.py
@@ -51,12 +53,16 @@ example-graph: ./sample/saved_model/saved_model.pb
 
 example-tensorflow: build-sample example-graph
 	$(call message, Run ./build/sample/sample)
+ifeq ($(USE_LIBTENSORFLOW_CC),1)
 	@env TF_CPP_MIN_LOG_LEVEL=2 $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- ./sample/saved_model/
+else
+	@env TF_CPP_MIN_LOG_LEVEL=2 PYTHONPATH=$(THIS_MAKEFILE_DIR)/src/PyCXpress/example $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- model.Model
+endif
 
 example: example-pycxpress example-tensorflow
 
 build: build-sample build-dist
-rebuild: cleanup source-all build
+rebuild: clean source-all build
 .NOTPARALLEL: rebuild
 
 #*****************************************#
@@ -65,7 +71,6 @@ rebuild: cleanup source-all build
 
 CMAKE_OPTIONS :=
 
-USE_LIBTENSORFLOW_CC := 0
 ifeq ($(USE_LIBTENSORFLOW_CC),1)
 	ifeq ($(CMAKE_OPTIONS),)
 		CMAKE_OPTIONS += -DCMAKE_PREFIX_PATH="$(REPO_DIR)/third_party/libtorch;$(REPO_DIR)/third_party/libtensorflow_cc"
@@ -114,10 +119,12 @@ endif
 
 #* CMake
 source-all: FORCE
-	$(call message, Clean)
-	rm -rf build
 	$(call message, Source)
 	$(CMAKE) -B build $(CMAKE_OPTIONS)
+
+build-example: source-all
+	$(call message, Build)
+	$(CMAKE) --build build/example
 
 source-sample: FORCE
 	$(call message, Source)
@@ -127,12 +134,9 @@ build-sample: source-sample
 	$(call message, Build)
 	$(CMAKE) --build build/sample
 
-doc: FORCE
-	$(call message, Source)
-	$(CMAKE) -S doc -B build/doc $(CMAKE_OPTIONS)
+doc: source-all
 	$(call message, GenerateDocs)
 	$(CMAKE) --build build/doc --target GenerateDocs
-
 
 #* Protobuf
 .PHONY: protobuf-install
@@ -194,9 +198,7 @@ format-cpp:
 
 .PHONY: format-cmake
 #[Format.$(CMAKE)](https://github.com/TheLartians/Format.cmake)
-format-cmake:
-	$(call message, Source CMAKE)
-	$(CMAKE) -B build $(CMAKE_OPTIONS)
+format-cmake: source-all
 	$(call message, Format)
 	$(CMAKE) --build build --target fix-format
 	$(call message, Revert back all those tensorflow proto changes because of clang-format bug)
@@ -268,16 +270,17 @@ build-dist:
 	$(PYTHON) -m build --outdir dist/
 
 .PHONY: build-remove
-build-remove: cleanup
+build-remove:
+	test ! -d build/example || cmake --build build/example --target clean
 	test ! -d build/sample || cmake --build build/sample --target clean
 	test ! -d build/tests  || cmake --build build/tests --target clean
 	test ! -d build/doc    || cmake --build build/doc --target clean
 
-.PHONY: cleanup
-cleanup: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove build-remove
+.PHONY: clean
+clean: pycache-remove dsstore-remove mypycache-remove ipynbcheckpoints-remove pytestcache-remove build-remove
 
 .PHONY: distclean
-distclean: cleanup
+distclean: clean
 	rm -rf $(REPO_DIR)/dist/
 	rm -rf $(REPO_DIR)/build/
 	rm -rf $(REPO_DIR)/sample/frozen_graph $(REPO_DIR)/sample/saved_model

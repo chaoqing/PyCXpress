@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring
 
+from typing import List
+
 import argparse
 import sys
 import sysconfig
@@ -9,15 +11,17 @@ from pybind11 import get_include as pybind11_include
 from PyCXpress import get_include, version
 
 
-def print_includes() -> None:
-    dirs = {
+def all_includes() -> List[str]:
+    return [
         sysconfig.get_path("include"),
         sysconfig.get_path("platinclude"),
         pybind11_include(),
         get_include(),
-    }
+    ]
 
-    print(" ".join(f"-I {d}" for d in dirs))
+
+def print_includes() -> None:
+    print(" ".join(f"-I {d}" for d in all_includes()))
 
 
 def main() -> None:

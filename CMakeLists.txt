@@ -13,6 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # needed to generate test target
 enable_testing()
 
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/src/PyCXpress/example/ ${CMAKE_BINARY_DIR}/example)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/sample ${CMAKE_BINARY_DIR}/sample)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/tests ${CMAKE_BINARY_DIR}/tests)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/doc ${CMAKE_BINARY_DIR}/doc)

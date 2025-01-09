@@ -1,8 +1,116 @@
 #include <tensorflow_cpy/tensorflow.h>
 
+#include <iostream>
+
+#ifndef NDEBUG
+#    define PYBIND11_DETAILED_ERROR_MESSAGES
+#endif
+
+#include <PyCXpress/core.hpp>
+#include <PyCXpress/utils.hpp>
+
 namespace tensorflow_cpy {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+    namespace pcx   = PyCXpress;
+    namespace error = tensorflow::error;
+    using Status    = tensorflow::Status;
+    using Tensor    = tensorflow::Tensor;
+
+    class PythonSession : public tensorflow::Session {
+        pcx::Model*             m_model;
+        pcx::PythonInterpreter& GetPython() {
+            return ::utils::Singleton<pcx::PythonInterpreter>::Instance();
+        }
+
+        std::vector<std::string> input_names;
+        std::vector<std::string> output_names;
+
+    public:
+        PythonSession(const std::string& path) {
+            // TODO: give model name
+            m_model = &GetPython().create_model(path);
+        }
+        ~PythonSession() override {}
+
+        Status Create(const tensorflow::GraphDef& graph) override {
+            // TODO: create handle I/O names
+            input_names.push_back("input/data");
+            input_names.push_back("new_2d_shape");
+            output_names.push_back("output_a");
+            return tensorflow::OkStatus();
+        }
+
+        Status Run(const std::vector<std::pair<std::string, Tensor> >& inputs,
+                   const std::vector<std::string>&                     output_tensor_names,
+                   const std::vector<std::string>&                     target_tensor_names,
+                   std::vector<Tensor>*                                outputs) override {
+            return Status(error::UNIMPLEMENTED, "Not implemented");
+        }
+
+        Status ListDevices(std::vector<tensorflow::DeviceAttributes>* response) override {
+            return Status(error::UNIMPLEMENTED, "Not implemented");
+        }
+
+        Status Close() override { return tensorflow::OkStatus(); }
+
+        Status LocalDeviceManager(const tensorflow::DeviceMgr** output) override {
+            return Status(error::UNIMPLEMENTED, "Not implemented");
+        }
+
+        typedef int64_t CallableHandle;
+
+        Status MakeCallable(const tensorflow::CallableOptions& callable_options,
+                            CallableHandle*                    out_handle) override {
+            return Status(error::UNIMPLEMENTED, "Not implemented");
+        }
+
+        Status RunCallable(CallableHandle handle, const std::vector<Tensor>& feed_tensors,
+                           std::vector<Tensor>*     fetch_tensors,
+                           tensorflow::RunMetadata* run_metadata) override {
+            void*  pBuffer = nullptr;
+            size_t nBytes  = 0;
+            for (size_t i = 0; i < feed_tensors.size(); i++) {
+                auto& input_tensor = feed_tensors[i];
+
+                std::vector<size_t> shape;
+                for (auto d = 0; d < input_tensor.dims(); d++) {
+                    shape.push_back(input_tensor.dim_size(d));
+                }
+                // TODO: use correct input names
+                std::tie(pBuffer, nBytes) = m_model->set_buffer(input_names[i], shape);
+                // TODO: correct copy data for both host and device data
+                memcpy(pBuffer, input_tensor.data(), nBytes);
+            }
+
+            m_model->run();
+
+            for (auto& o : output_names) {
+                std::vector<size_t> shape;
+                pcx::BufferPtr      buf;
+                std::tie(buf, shape)      = m_model->get_buffer(o);
+                std::tie(pBuffer, nBytes) = buf;
+
+                tensorflow::TensorShape t_shape;
+                for (auto d : shape) {
+                    t_shape.AddDim(d);
+                }
+
+                fetch_tensors->push_back(Tensor(tensorflow::DT_UINT8, t_shape));
+                // TODO: correct copy data for both host and device data
+                memcpy(fetch_tensors->back().data(), pBuffer, nBytes);
+            }
+
+            return Status(error::UNIMPLEMENTED, "Not implemented");
+        }
+
+        Status ReleaseCallable(CallableHandle handle) override {
+            return Status(error::UNIMPLEMENTED, "Not implemented");
+        }
+
+        Status Finalize() override { return tensorflow::OkStatus(); }
+    };
+
     namespace stream_executor {
         /***********************************************************/
         // tensorflow/stream_executor/stream_executor_pimpl.h     //
@@ -145,10 +253,10 @@ namespace tensorflow_cpy {
         Status::Status(const Status& s)            = default;
         Status& Status::operator=(const Status& s) = default;
 
-        bool Status::ok() const { return true; }  // Simplified implementation
+        bool Status::ok() const { return m_code == error::Code::OK; }  // Simplified implementation
 
         errors::Code Status::code() const {
-            return errors::Code::OK;  // Simplified implementation
+            return m_code;  // Simplified implementation
         }
 
         const std::string& Status::error_message() const {
@@ -653,6 +761,10 @@ namespace tensorflow_cpy {
                               const std::string&                     export_dir,
                               const std::unordered_set<std::string>& tags,
                               SavedModelBundle* const                bundle) {
+            // TODO: handle export_dir correctly
+            auto ptr = new PythonSession(export_dir);
+
+            bundle->session.reset(ptr);
             return Status::OK();
         }
     };  // namespace tensorflow

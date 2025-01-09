@@ -142,7 +142,7 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
     tf::SavedModelBundle model;
     auto status = tf::LoadSavedModel(sessionOption, runOption, model_path, {"serve"}, &model);
     if (!status.ok()) {
-        std::cerr << status.ToString() << std::endl;
+        std::cerr << "Error happended when loading model: " << status.ToString() << std::endl;
     }
     assert(status.ok());
 
@@ -252,7 +252,7 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
 
     status = model.GetSession()->MakeCallable(callOptions, &modelFuncHandle);
     if (!status.ok()) {
-        std::cerr << status.ToString() << std::endl;
+        std::cerr << "Error happended when MakeCallable: " << status.ToString() << std::endl;
     }
     assert(status.ok());
 
