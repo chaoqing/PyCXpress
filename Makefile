@@ -149,7 +149,7 @@ protobuf-install:
 #* Poetry
 .PHONY: poetry-download
 poetry-download:
-	curl -sSL https://install.python-poetry.org | python3 -
+	curl -sSL https://install.python-poetry.org | python3 - --version 1.8.4
 	~/.local/share/pypoetry/venv/bin/pip install poetry-plugin-export
 
 .PHONY: poetry-remove

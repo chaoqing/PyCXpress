@@ -12,6 +12,7 @@
 namespace tensorflow_cpy {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-variable"
     namespace pcx   = PyCXpress;
     namespace error = tensorflow::error;
     using Status    = tensorflow::Status;

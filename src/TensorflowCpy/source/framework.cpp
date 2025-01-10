@@ -17,20 +17,6 @@ void wait_for_debugger_attach() {
     }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunknown-warning-option"
-
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-Wdeprecated-builtins"
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#pragma GCC diagnostic ignored "-Winconsistent-missing-override"
-
-#pragma GCC diagnostic ignored "-Wswitch"
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-
 
 #if ENABLE_TENSORFLOW_CPY
 #    include <tensorflow_cpy/tensorflow.h>
@@ -38,6 +24,20 @@ void wait_for_debugger_attach() {
 namespace tf = tensorflow_cpy::tensorflow;
 namespace se = tensorflow_cpy::stream_executor;
 #else
+
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunknown-warning-option"
+
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
+#    pragma GCC diagnostic ignored "-Wpedantic"
+#    pragma GCC diagnostic ignored "-Wdeprecated-builtins"
+#    pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#    pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#    pragma GCC diagnostic ignored "-Winconsistent-missing-override"
+
+#    pragma GCC diagnostic ignored "-Wswitch"
+#    pragma GCC diagnostic ignored "-Wsign-compare"
+#    pragma GCC diagnostic ignored "-Wunused-variable"
 #    include <tensorflow/cc/saved_model/loader.h>
 #    include <tensorflow/cc/saved_model/tag_constants.h>
 #    include <tensorflow/core/common_runtime/device/device_id.h>
@@ -54,13 +54,19 @@ namespace se = tensorflow_cpy::stream_executor;
 #    include <tensorflow/core/platform/types.h>
 #    include <tensorflow/core/public/session.h>
 #    include <tensorflow/core/util/stream_executor_util.h>
+#    pragma GCC diagnostic pop
 
 namespace tf = tensorflow;
 namespace se = stream_executor;
 #endif
 
-#pragma GCC diagnostic pop
 
+#pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wunused-variable"
+#define UNUSED(expr)  \
+    do {              \
+        (void)(expr); \
+    } while (0)
 class TensorBufferView : public tf::TensorBuffer {
     std::size_t m_len;
 
@@ -124,6 +130,9 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
 
     // load ops
     tf::Env* env = tf::Env::Default();
+    UNUSED(env);  // TODO: handle this unused
+    tf::Status status;
+
 
     assert(tf::OpRegistry::Global()->ProcessRegistrations().ok());
     tf::OpRegistry::Global()->DeferRegistrations();
@@ -133,14 +142,15 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
         for (const auto& op_so : fs::directory_iterator{ops_dir}) {
             if (op_so.is_directory()) continue;
             void* opHandle = nullptr;
-            assert(env->LoadDynamicLibrary(op_so.path().c_str(), &opHandle).ok());
+            status         = env->LoadDynamicLibrary(op_so.path().c_str(), &opHandle);
+            assert(status.ok());
         }
     }
     assert(tf::OpRegistry::Global()->ProcessRegistrations().ok());
 
     // load model
     tf::SavedModelBundle model;
-    auto status = tf::LoadSavedModel(sessionOption, runOption, model_path, {"serve"}, &model);
+    status = tf::LoadSavedModel(sessionOption, runOption, model_path, {"serve"}, &model);
     if (!status.ok()) {
         std::cerr << "Error happended when loading model: " << status.ToString() << std::endl;
     }
@@ -269,9 +279,9 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
     if (input_tensor_A.GetMemoryType() == tf::AllocatorMemoryType::kDevice) {
         auto ptr = tf::StreamExecutorUtil::AsDeviceMemory<uint8_t>(input_tensor_A);
         // a[*] == 5;
-        assert(streamExecutor
-                   ->SynchronousMemSet(&ptr, 5, input_tensor_A.NumElements() * sizeof(uint8_t))
-                   .ok());
+        status = streamExecutor->SynchronousMemSet(&ptr, 5,
+                                                   input_tensor_A.NumElements() * sizeof(uint8_t));
+        assert(status.ok());
     }
     // std::cerr<<input_tensor_A.IsInitialized()<<std::endl;
     std::vector<uint8_t> input_tensor_B_host(shape.num_elements());
@@ -311,3 +321,4 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
 
     return 0;
 }
+#pragma GCC diagnostic pop
