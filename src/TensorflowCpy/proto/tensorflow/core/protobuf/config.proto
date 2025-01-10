@@ -5,6 +5,7 @@ package tensorflow;
 import "tensorflow/core/framework/cost_graph.proto";
 import "tensorflow/core/framework/graph.proto";
 import "tensorflow/core/framework/step_stats.proto";
+import "tensorflow/core/protobuf/cluster.proto";
 import "tensorflow/core/protobuf/coordination_config.proto";
 import "tensorflow/core/protobuf/debug.proto";
 import "tensorflow/core/protobuf/rewriter_config.proto";
@@ -529,6 +530,8 @@ message ConfigProto {
   // Options that apply when this session uses the distributed runtime.
   RPCOptions rpc_options = 13;
 
+  // Optional list of all workers to use in this session.
+  ClusterDef cluster_def = 14;
 
   // If true, any resources such as Variables used in the session will not be
   // shared with other sessions. However, when clusterspec propagation is
