@@ -14,11 +14,140 @@ namespace tensorflow_cpy {
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-variable"
     namespace pcx   = PyCXpress;
-    namespace error = tensorflow::error;
-    using Status    = tensorflow::Status;
-    using Tensor    = tensorflow::Tensor;
+    namespace tf    = tensorflow;
+    namespace se    = stream_executor;
+    namespace error = tf::error;
 
-    class PythonSession : public tensorflow::Session {
+    using Status = tf::Status;
+    using Tensor = tf::Tensor;
+
+    class CPUAllocator : public tf::Allocator {
+    public:
+        CPUAllocator() = default;
+
+        std::string Name() override { return "CPU"; }
+
+        void* AllocateRaw(size_t alignment, size_t num_bytes) override {
+            void* ptr = nullptr;
+            // Simple aligned allocation
+            posix_memalign(&ptr, alignment, num_bytes);
+            return ptr;
+        }
+
+        void DeallocateRaw(void* ptr) override { free(ptr); }
+
+        TF_DISALLOW_COPY_AND_ASSIGN(CPUAllocator);
+    };
+
+    class CPUTensorBuffer : public tf::TensorBuffer {
+        std::size_t m_len;
+
+    public:
+        CPUTensorBuffer(void* data, std::size_t len) : tf::TensorBuffer(data), m_len(len) {}
+
+        std::size_t size() const override { return m_len; }
+
+        tf::AllocatorMemoryType GetMemoryType() const override {
+            return tf::AllocatorMemoryType::kHostPageable;
+        }
+
+        tf::TensorBuffer* root_buffer() override { return this; }
+        bool              OwnsMemory() const override { return true; }
+
+        void FillAllocationDescription(tf::AllocationDescription* proto) const override {
+            proto->set_allocated_bytes(static_cast<int64_t>(m_len));
+            proto->set_allocator_name("TensorBufferView");
+            proto->set_ptr(reinterpret_cast<uintptr_t>(this->data()));
+        }
+    };
+
+    class CPUDeviceWrapper : public tf::Device {
+    public:
+        CPUDeviceWrapper(tf::Env* env, const tf::DeviceAttributes& device_attributes)
+            : tf::Device(env, device_attributes) {}
+
+        tf::Allocator* GetAllocator(tf::AllocatorAttributes attr) override {
+            return &::utils::Singleton<CPUAllocator>::Instance();
+        }
+    };
+
+    class PythonDeviceMgr : public tf::DeviceMgr {
+    private:
+        std::unique_ptr<tf::Device> m_cpu_device_ptr;
+        std::vector<tf::Device*>    devices_;
+
+    public:
+        PythonDeviceMgr() {
+            tf::Env*             env = nullptr;
+            tf::DeviceAttributes attr;
+
+            attr.set_name("CPU");
+            attr.set_device_type("CPU");
+            m_cpu_device_ptr.reset(new CPUDeviceWrapper(env, attr));
+
+            // TODO: get the correct GPU device list
+            attr.set_name("GPU0");
+            attr.set_device_type("GPU");
+            devices_.push_back(new tf::Device(env, attr));
+
+            devices_.push_back(m_cpu_device_ptr.get());
+        }
+        ~PythonDeviceMgr() override {
+            devices_.pop_back();
+            for (auto device : devices_) {
+                delete device;
+            }
+            devices_.clear();
+        }
+        void ListDeviceAttributes(std::vector<tf::DeviceAttributes>* devices) const override {
+            devices->clear();
+            for (auto device : devices_) {
+                devices->push_back(device->attributes());
+            }
+        }
+        int NumDeviceType(const std::string& type) const override {
+            int count = 0;
+            for (auto device : devices_) {
+                if (device->device_type() == type) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        tf::Device* HostCPU() const override { return m_cpu_device_ptr.get(); }
+
+        std::vector<tf::Device*> ListDevices() const override { return devices_; }
+    };
+
+    class PythonPlatform : public se::Platform {
+    public:
+        static se::Platform* Global() {
+            static PythonPlatform instance;
+            return &instance;
+        }
+        ~PythonPlatform() override {}
+
+        se::port::StatusOr<se::StreamExecutor*> ExecutorForDevice(int ordinal) override {
+            if (m_executor_ptr == nullptr) {
+                return se::port::StatusOr<se::StreamExecutor*>(
+                    tf::Status(error::NOT_FOUND, "GPU device do not exist"));
+            } else {
+                return se::port::StatusOr<se::StreamExecutor*>(m_executor_ptr.get());
+            }
+        }
+
+    private:
+        PythonPlatform() {
+            if (::utils::Singleton<PythonDeviceMgr>::Instance().NumDeviceType("GPU") > 0) {
+                m_executor_ptr = std::make_unique<se::StreamExecutor>(this, nullptr, 0);
+            }
+        }
+        std::unique_ptr<se::StreamExecutor> m_executor_ptr = nullptr;
+    };
+
+
+    class PythonSession : public tf::Session {
         pcx::Model*             m_model;
         pcx::PythonInterpreter& GetPython() {
             return ::utils::Singleton<pcx::PythonInterpreter>::Instance();
@@ -31,15 +160,15 @@ namespace tensorflow_cpy {
         PythonSession(const std::string& path) {
             // TODO: give model name
             m_model = &GetPython().create_model(path);
+            input_names.push_back("a");
+            input_names.push_back("b");
+            output_names.push_back("import/add:0");
         }
         ~PythonSession() override {}
 
-        Status Create(const tensorflow::GraphDef& graph) override {
+        Status Create(const tf::GraphDef& graph) override {
             // TODO: create handle I/O names
-            input_names.push_back("input/data");
-            input_names.push_back("new_2d_shape");
-            output_names.push_back("output_a");
-            return tensorflow::OkStatus();
+            return tf::OkStatus();
         }
 
         Status Run(const std::vector<std::pair<std::string, Tensor> >& inputs,
@@ -49,26 +178,29 @@ namespace tensorflow_cpy {
             return Status(error::UNIMPLEMENTED, "Not implemented");
         }
 
-        Status ListDevices(std::vector<tensorflow::DeviceAttributes>* response) override {
-            return Status(error::UNIMPLEMENTED, "Not implemented");
+        Status ListDevices(std::vector<tf::DeviceAttributes>* response) override {
+            ::utils::Singleton<PythonDeviceMgr>::Instance().ListDeviceAttributes(response);
+            return tf::OkStatus();
         }
 
-        Status Close() override { return tensorflow::OkStatus(); }
+        Status Close() override { return tf::OkStatus(); }
 
-        Status LocalDeviceManager(const tensorflow::DeviceMgr** output) override {
-            return Status(error::UNIMPLEMENTED, "Not implemented");
+        Status LocalDeviceManager(const tf::DeviceMgr** output) override {
+            *output = &::utils::Singleton<PythonDeviceMgr>::Instance();
+            return tf::OkStatus();
         }
 
         typedef int64_t CallableHandle;
 
-        Status MakeCallable(const tensorflow::CallableOptions& callable_options,
-                            CallableHandle*                    out_handle) override {
-            return Status(error::UNIMPLEMENTED, "Not implemented");
+        Status MakeCallable(const tf::CallableOptions& callable_options,
+                            CallableHandle*            out_handle) override {
+            *out_handle = (CallableHandle)this;
+            return tf::OkStatus();
         }
 
         Status RunCallable(CallableHandle handle, const std::vector<Tensor>& feed_tensors,
-                           std::vector<Tensor>*     fetch_tensors,
-                           tensorflow::RunMetadata* run_metadata) override {
+                           std::vector<Tensor>* fetch_tensors,
+                           tf::RunMetadata*     run_metadata) override {
             void*  pBuffer = nullptr;
             size_t nBytes  = 0;
             for (size_t i = 0; i < feed_tensors.size(); i++) {
@@ -92,30 +224,36 @@ namespace tensorflow_cpy {
                 std::tie(buf, shape)      = m_model->get_buffer(o);
                 std::tie(pBuffer, nBytes) = buf;
 
-                tensorflow::TensorShape t_shape;
+                tf::TensorShape t_shape;
                 for (auto d : shape) {
                     t_shape.AddDim(d);
                 }
 
-                fetch_tensors->push_back(Tensor(tensorflow::DT_UINT8, t_shape));
                 // TODO: correct copy data for both host and device data
+                fetch_tensors->push_back(Tensor(tf::DT_UINT8, t_shape));
                 memcpy(fetch_tensors->back().data(), pBuffer, nBytes);
             }
 
-            return Status(error::UNIMPLEMENTED, "Not implemented");
+            return tf::OkStatus();
         }
 
         Status ReleaseCallable(CallableHandle handle) override {
             return Status(error::UNIMPLEMENTED, "Not implemented");
         }
 
-        Status Finalize() override { return tensorflow::OkStatus(); }
+        Status Finalize() override { return tf::OkStatus(); }
     };
 
     namespace stream_executor {
         /***********************************************************/
         // tensorflow/stream_executor/stream_executor_pimpl.h     //
         /***************************************************/
+
+        StreamExecutor::StreamExecutor(
+            const Platform*                                    platform,
+            std::unique_ptr<internal::StreamExecutorInterface> implementation, int device_ordinal)
+            : platform_(platform) {}
+
         StreamExecutor::~StreamExecutor() {}
 
         port::Status StreamExecutor::Init() { return port::Status::OK(); }
@@ -332,30 +470,36 @@ namespace tensorflow_cpy {
         Session::~Session() {}
 
         Status Session::LocalDeviceManager(const DeviceMgr** output) {
-            return Status();  // Simplified implementation
+            return Status(error::DEADLINE_EXCEEDED,
+                          "should not reach here");  // Simplified implementation
         }
 
         Status Session::MakeCallable(const CallableOptions& callable_options,
                                      CallableHandle*        out_handle) {
-            return Status();  // Simplified implementation
+            return Status(error::DEADLINE_EXCEEDED,
+                          "should not reach here");  // Simplified implementation
         }
 
         Status Session::RunCallable(CallableHandle handle, const std::vector<Tensor>& feed_tensors,
                                     std::vector<Tensor>* fetch_tensors, RunMetadata* run_metadata) {
-            return Status();  // Simplified implementation
+            return Status(error::DEADLINE_EXCEEDED,
+                          "should not reach here");  // Simplified implementation
         }
 
         Status Session::ReleaseCallable(CallableHandle handle) {
-            return Status();  // Simplified implementation
+            return Status(error::DEADLINE_EXCEEDED,
+                          "should not reach here");  // Simplified implementation
         }
 
         Status Session::Finalize() {
-            return Status();  // Simplified implementation
+            return Status(error::DEADLINE_EXCEEDED,
+                          "should not reach here");  // Simplified implementation
         }
 
         Status NewSession(const SessionOptions& options, Session** out_session) {
             *out_session = nullptr;
-            return Status();  // Simplified implementation
+            return Status(error::DEADLINE_EXCEEDED,
+                          "should not reach here");  // Simplified implementation
         }
 
         Session* NewSession(const SessionOptions& options) {
@@ -382,12 +526,7 @@ namespace tensorflow_cpy {
         // tensorflow/core/common_runtime/gpu/gpu_init.h     //
         /***************************************************/
 
-        static stream_executor::Platform* gpu_platform = nullptr;
-
-        stream_executor::Platform* GPUMachineManager() {
-            // Simplified implementation that returns the singleton
-            return gpu_platform;
-        }
+        stream_executor::Platform* GPUMachineManager() { return PythonPlatform::Global(); }
 
 
         /***********************************************************/
@@ -405,25 +544,24 @@ namespace tensorflow_cpy {
         }
 
         void* GPUBFCAllocator::AllocateRaw(size_t alignment, size_t num_bytes) {
-            // Placeholder implementation
-            return nullptr;
+            // TODO: add CUDA support
+            return ::utils::Singleton<CPUAllocator>::Instance().AllocateRaw(
+                alignof(std::max_align_t), num_bytes);
         }
 
         void GPUBFCAllocator::DeallocateRaw(void* ptr) {
-            // Placeholder implementation
+            // TODO: add CUDA support
+            return ::utils::Singleton<CPUAllocator>::Instance().DeallocateRaw(ptr);
         }
 
 
         /***********************************************************/
         // tensorflow/core/framework/tensor_shape.h     //
         /***************************************************/
-        TensorShape::TensorShape(std::initializer_list<int64_t> dim_sizes) {
-            // Implementation will be added
-        }
+        TensorShape::TensorShape(std::initializer_list<int64_t> dim_sizes)
+            : m_dims(std::move(dim_sizes)) {}
 
-        TensorShape::TensorShape() {
-            // Initialize empty shape
-        }
+        TensorShape::TensorShape() {}
 
         int64_t TensorShape::num_elements() const {
             int64_t result = 1;
@@ -435,7 +573,7 @@ namespace tensorflow_cpy {
 
         void TensorShape::AddDim(int64_t size) {
             CHECK_GE(size, 0);
-            // Implementation will be added
+            m_dims.push_back(size);
         }
 
         void TensorShape::AppendShape(const TensorShape& shape) {
@@ -447,30 +585,31 @@ namespace tensorflow_cpy {
         void TensorShape::InsertDim(int d, int64_t size) {
             CHECK_GE(d, 0);
             CHECK_GE(size, 0);
-            // Implementation will be added
+            m_dims.insert(m_dims.begin() + d, size);
         }
 
         void TensorShape::set_dim(int d, int64_t size) {
             CHECK_GE(d, 0);
             CHECK_LT(d, dims());
             CHECK_GE(size, 0);
-            // Implementation will be added
+            m_dims[d] = size;
         }
 
         void TensorShape::RemoveDimRange(int begin, int end) {
-            // Implementation will be added
+            CHECK_GE(begin, 0);
+            CHECK_LT(begin, end);
+            for (auto i = 0; i < dims() - end; i++) {
+                m_dims[begin + i] = m_dims[end + i];
+            }
+            m_dims.resize(dims() - end + begin);
         }
 
-        int TensorShape::dims() const {
-            // Implementation will be added
-            return 0;
-        }
+        int TensorShape::dims() const { return m_dims.size(); }
 
         int64_t TensorShape::dim_size(int d) const {
             CHECK_GE(d, 0);
             CHECK_LT(d, dims());
-            // Implementation will be added
-            return 0;
+            return m_dims[d];
         }
 
         TensorShapeIter<TensorShape> TensorShape::begin() const {
@@ -530,13 +669,27 @@ namespace tensorflow_cpy {
         /***************************************************/
 
         int DataTypeSize(DataType dt) {
+#define CASE_SIZEOF_TYPE(ENUM) \
+    case DataType::ENUM:       \
+        return sizeof(EnumToDataType<DataType::ENUM>::Type)
             switch (dt) {
-                case DataType::DT_BOOL:
-                    return sizeof(EnumToDataType<DataType::DT_BOOL>::Type);
+                CASE_SIZEOF_TYPE(DT_FLOAT);
+                CASE_SIZEOF_TYPE(DT_DOUBLE);
+                CASE_SIZEOF_TYPE(DT_INT32);
+                CASE_SIZEOF_TYPE(DT_UINT8);
+                CASE_SIZEOF_TYPE(DT_INT16);
+                CASE_SIZEOF_TYPE(DT_INT8);
+                CASE_SIZEOF_TYPE(DT_BOOL);
+                CASE_SIZEOF_TYPE(DT_INT64);
+                CASE_SIZEOF_TYPE(DT_UINT16);
+                CASE_SIZEOF_TYPE(DT_UINT32);
+                CASE_SIZEOF_TYPE(DT_UINT64);
                 default:
                     return 0;
+#undef CASE_SIZEOF_TYPE
             }
         }
+
 
         // Default constructor creates a 1-dimensional, 0-element float tensor
         Tensor::Tensor() : shape_(TensorShape({0})), buf_(nullptr) {}
@@ -547,9 +700,9 @@ namespace tensorflow_cpy {
             size_t size = shape.num_elements() * DataTypeSize(type);
             if (size > 0) {
                 // Use default CPU allocator
-                // Allocator* allocator = cpu_allocator();
-                // void* data = allocator->AllocateRaw(alignof(std::max_align_t), size);
-                // buf_ = new TensorBuffer(data);
+                Allocator* allocator = &::utils::Singleton<CPUAllocator>::Instance();
+                void*      data      = allocator->AllocateRaw(alignof(std::max_align_t), size);
+                buf_                 = new CPUTensorBuffer(data, size);
             }
         }
 
@@ -558,8 +711,8 @@ namespace tensorflow_cpy {
             : shape_(shape), buf_(nullptr) {
             size_t size = shape.num_elements() * DataTypeSize(type);
             if (size > 0) {
-                // void* data = a->AllocateRaw(alignof(std::max_align_t), size);
-                // buf_ = new TensorBuffer(data);
+                void* data = a->AllocateRaw(alignof(std::max_align_t), size);
+                buf_       = new CPUTensorBuffer(data, size);
             }
         }
 
@@ -662,24 +815,6 @@ namespace tensorflow_cpy {
             return "AllocatorStats";  // Simplified implementation
         }
 
-        namespace {
-            class CPUAllocator : public Allocator {
-            public:
-                std::string Name() override { return "cpu"; }
-
-                void* AllocateRaw(size_t alignment, size_t num_bytes) override {
-                    void* ptr = nullptr;
-                    // Simple aligned allocation
-                    posix_memalign(&ptr, alignment, num_bytes);
-                    return ptr;
-                }
-
-                void DeallocateRaw(void* ptr) override { free(ptr); }
-            };
-
-            static CPUAllocator* cpu_alloc = nullptr;
-        }  // namespace
-
         SubAllocator::SubAllocator(const std::vector<Visitor>& alloc_visitors,
                                    const std::vector<Visitor>& free_visitors)
             : alloc_visitors_(alloc_visitors), free_visitors_(free_visitors) {}
@@ -696,18 +831,6 @@ namespace tensorflow_cpy {
             }
         }
 
-        Allocator* cpu_allocator_base() {
-            if (cpu_alloc == nullptr) {
-                cpu_alloc = new CPUAllocator;
-            }
-            return cpu_alloc;
-        }
-
-        Allocator* cpu_allocator(int numa_node) {
-            // Simplified implementation that ignores numa_node
-            return cpu_allocator_base();
-        }
-
         void EnableCPUAllocatorStats() {}
         void DisableCPUAllocatorStats() {}
         bool CPUAllocatorStatsEnabled() { return false; }
@@ -721,10 +844,7 @@ namespace tensorflow_cpy {
         OpRegistry::OpRegistry()  = default;
         OpRegistry::~OpRegistry() = default;
 
-        OpRegistry* OpRegistry::Global() {
-            static OpRegistry* global_op_registry = new OpRegistry;
-            return global_op_registry;
-        }
+        OpRegistry* OpRegistry::Global() { return &::utils::Singleton<OpRegistry>::Instance(); }
 
         Status OpRegistry::ProcessRegistrations() const { return Status::OK(); }
 

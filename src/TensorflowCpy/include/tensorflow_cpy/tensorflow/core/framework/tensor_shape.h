@@ -28,6 +28,7 @@ class TensorShape;
 /// object, you can specify it then, or you can create a TensorShape with
 /// zero dimensions and one element, and call AddDim() to add dimensions later.
 class TensorShape {
+  std::vector<int64_t> m_dims;
  public:
   ///// \brief Construct a `TensorShapeBase` from the provided sizes.
   ///// REQUIRES: `dim_sizes[i] >= 0` (or >= -1 for PartialTensorShape)

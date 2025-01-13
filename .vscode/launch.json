@@ -22,13 +22,13 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/sample/sample",
-            "args": [],
+            "args": ["main.Model"],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/src/PyCXpress/example/",
+            "cwd": "${workspaceFolder}/build/sample",
             "environment": [
                 {
                     "name": "PYTHONPATH",
-                    "value": "${workspaceFolder}/src"
+                    "value": "${workspaceFolder}/sample"
                 },
                 {
                     "name": "LD_PRELOAD",

@@ -18,10 +18,15 @@ POETRY := poetry
 PYTHON := $(POETRY) run python3
 PYTHONPATH := $(REPO_DIR)/src
 CMAKE := cmake
+USE_GCC ?= 1
 TYPE ?= D
 USE_LIBTENSORFLOW_CC ?= 0
 
-ENVS := CC=clang CXX=clang++
+ifeq ($(USE_GCC),1)
+	ENVS += CC=gcc CXX=g++
+else
+	ENVS += CC=clang CXX=clang++
+endif
 ENVS += CPM_SOURCE_CACHE=$(CPM_SOURCE_CACHE)
 ENVS += POETRY_VIRTUALENVS_IN_PROJECT=true
 ENVS += PATH=$(REPO_DIR)/.venv/bin:$(PATH)
@@ -56,7 +61,7 @@ example-tensorflow: build-sample example-graph
 ifeq ($(USE_LIBTENSORFLOW_CC),1)
 	@env TF_CPP_MIN_LOG_LEVEL=2 $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- ./sample/saved_model/
 else
-	@env TF_CPP_MIN_LOG_LEVEL=2 PYTHONPATH=$(THIS_MAKEFILE_DIR)/src/PyCXpress/example $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- model.Model
+	@env TF_CPP_MIN_LOG_LEVEL=2 PYTHONPATH=$(THIS_MAKEFILE_DIR)/sample $(THIS_MAKEFILE_DIR)/build/sample/sample --name whole_flow -- main.Model
 endif
 
 example: example-pycxpress example-tensorflow

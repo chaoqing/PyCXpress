@@ -11,6 +11,9 @@ namespace tensorflow_cpy {
 namespace stream_executor {
   using namespace ::tensorflow;
 
+  namespace internal{
+    class StreamExecutorInterface{};
+  };
 
 
 // A StreamExecutor manages a single device, in terms of executing work (kernel
@@ -27,6 +30,11 @@ namespace stream_executor {
 // StreamExecutor interface should not be invoked from a signal handler.
 class StreamExecutor {
  public:
+  StreamExecutor(
+      const Platform* platform,
+      std::unique_ptr<internal::StreamExecutorInterface> implementation,
+      int device_ordinal);
+
   ~StreamExecutor();
 
   port::Status Init();

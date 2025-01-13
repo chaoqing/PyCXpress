@@ -70,12 +70,9 @@ class TF_MUST_USE_RESULT StatusOr;
 
 template <typename T>
 class StatusOr {
-  template <typename U>
-  friend class StatusOr;
-
  private:
-    Status status_;
-    std::unique_ptr<T> value_;
+   Status status_;
+   T data_;
 
  public:
   typedef T element_type;  // DEPRECATED: use `value_type`.
@@ -86,25 +83,6 @@ class StatusOr {
   // StatusOr<std::vector<int>> will be initialized with an empty vector,
   // instead of a Status::UNKNOWN status.
   explicit StatusOr();
-
-  // StatusOr<T> will be copy constructible/assignable if T is copy
-  // constructible.
-  StatusOr(const StatusOr&) = default;
-  StatusOr& operator=(const StatusOr&) = default;
-
-  // StatusOr<T> will be move constructible/assignable if T is move
-  // constructible.
-  StatusOr(StatusOr&&) = default;
-  StatusOr& operator=(StatusOr&&) = default;
-
-  // Conversion copy/move assignment operator, T must be convertible from U.
-  template <typename U, typename std::enable_if<
-                            std::is_convertible<U, T>::value>::type* = nullptr>
-  StatusOr& operator=(const StatusOr<U>& other);
-  template <typename U, typename std::enable_if<
-                            std::is_convertible<U, T>::value>::type* = nullptr>
-  StatusOr& operator=(StatusOr<U>&& other);
-
 
   // Constructs a new StatusOr with the given value. After calling this
   // constructor, calls to ValueOrDie() will succeed, and calls to status() will
@@ -128,7 +106,6 @@ class StatusOr {
   // In optimized builds, passing Status::OK() here will have the effect
   // of passing tensorflow::error::INTERNAL as a fallback.
   StatusOr(const Status& status);
-  StatusOr& operator=(const Status& status);
 
   // Similar to the `const T&` overload.
   //
@@ -137,7 +114,6 @@ class StatusOr {
 
   // RValue versions of the operations declared above.
   StatusOr(Status&& status);
-  StatusOr& operator=(Status&& status);
 
   // Returns this->status().ok()
   bool ok() const { return this->status_.ok(); }
@@ -148,6 +124,8 @@ class StatusOr {
   Status status() &&;
 
   // StatusOr<T>::value()
+  //
+  // absl::StatusOr compatible versions of ValueOrDie and ConsumeValueOrDie.
   const T& value() const&;
   T& value() &;
   const T&& value() const&&;
@@ -176,16 +154,88 @@ class StatusOr {
   // warnings about possible uses of the statusor object after the move.
   // C++ style guide waiver for ref-qualified overloads granted in cl/143176389
   // See go/ref-qualifiers for more details on such overloads.
-  const T& ValueOrDie() const& {return *value_;}
-  T& ValueOrDie() & {return *value_;}
-  const T&& ValueOrDie() const&& {return std::move(*value_);}
-  T&& ValueOrDie() && {return std::move(*value_);}
+  const T& ValueOrDie() const&;
+  T& ValueOrDie() &;
+  const T&& ValueOrDie() const&&;
+  T&& ValueOrDie() &&;
 
   // Ignores any errors. This method does nothing except potentially suppress
   // complaints from any tools that are checking that errors are not dropped on
   // the floor.
   void IgnoreError() const;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// Implementation details for StatusOr<T>
+
+template <typename T>
+StatusOr<T>::StatusOr(const T& value) : data_(value) {}
+
+
+template <typename T>
+StatusOr<T>::StatusOr(T&& value) : data_(std::move(value)) {}
+
+template <typename T>
+StatusOr<T>::StatusOr(const Status& status) : status_(status) {}
+
+template <typename T>
+StatusOr<T>::StatusOr(Status&& status) : status_(std::move(status)) {}
+
+template <typename T>
+const Status& StatusOr<T>::status() const& {
+  return this->status_;
+}
+template <typename T>
+Status StatusOr<T>::status() && {
+  // Note that we copy instead of moving the status here so that
+  // ~StatusOrData() can call ok() without invoking UB.
+  return ok() ? OkStatus() : this->status_;
+}
+
+template <typename T>
+const T& StatusOr<T>::value() const& {
+  return this->data_;
+}
+
+template <typename T>
+T& StatusOr<T>::value() & {
+  return this->data_;
+}
+
+template <typename T>
+const T&& StatusOr<T>::value() const&& {
+  return std::move(this->data_);
+}
+
+template <typename T>
+T&& StatusOr<T>::value() && {
+  return std::move(this->data_);
+}
+
+template <typename T>
+const T& StatusOr<T>::ValueOrDie() const& {
+  return this->data_;
+}
+
+template <typename T>
+T& StatusOr<T>::ValueOrDie() & {
+  return this->data_;
+}
+
+template <typename T>
+const T&& StatusOr<T>::ValueOrDie() const&& {
+  return std::move(this->data_);
+}
+
+template <typename T>
+T&& StatusOr<T>::ValueOrDie() && {
+  return std::move(this->data_);
+}
+
+template <typename T>
+void StatusOr<T>::IgnoreError() const {
+  // no-op
+}
 
 #define TF_ASSERT_OK_AND_ASSIGN(lhs, rexpr)                             \
   TF_ASSERT_OK_AND_ASSIGN_IMPL(                                         \

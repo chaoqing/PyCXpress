@@ -90,7 +90,7 @@ class ModelAnnotationCreator(type):
 
         for field_name, field_meta in fields.items():
             field_meta.setdefault(field_name)
-            attrs[field_name] = generate_property(field_meta, raw)
+            attrs[field_name] = generate_property(field_meta, raw, mode)
 
         get_buffer_shape, set_buffer_value, init_func = mcs.general_funcs(
             name, [field_meta.name for field_meta in fields.values()]
@@ -119,15 +119,28 @@ class ModelAnnotationCreator(type):
         return get_buffer_shape, set_buffer_value, init_func
 
     @staticmethod
-    def generate_input_property(field: TensorMeta, raw: bool):
+    def generate_input_property(
+        field: TensorMeta,
+        raw: bool,
+        mode: ModelRuntimeType = ModelRuntimeType.EagerExecution,
+    ):
         def get_func(self):
-            data = self.__buffer_data__[field.name].data
-            if raw:
-                return data
-            else:
-                import tensorflow as tf
+            if mode == ModelRuntimeType.EagerExecution:
+                data = self.__buffer_data__[field.name].data
+                if raw:
+                    return data
+                else:
+                    import tensorflow as tf
 
-                return tf.Variable(data, name=field.name)
+                    return tf.Variable(data, name=field.name)
+            elif mode == ModelRuntimeType.GraphExecution:
+                assert not raw
+                import tensorflow.compat.v1 as tf1
+
+                return tf1.placeholder(field.dtype, shape=field.shape, name=field.name)
+                # TODO: record used input names in graph mode
+            else:
+                raise NotImplementedError("OfflineExecution not supported for now")
 
         def set_func(*_):
             raise AssertionError("Not supported for input tensor")
@@ -138,18 +151,31 @@ class ModelAnnotationCreator(type):
         return property(fget=get_func, fset=set_func, fdel=del_func, doc=field.doc)
 
     @staticmethod
-    def generate_output_property(field: TensorMeta, raw: bool):
+    def generate_output_property(
+        field: TensorMeta,
+        raw: bool,
+        mode: ModelRuntimeType = ModelRuntimeType.EagerExecution,
+    ):
         def get_func(self):
             logger.warning(f"Only read the data field {field.name} in debugging mode")
             buffer = self.__buffer_data__[field.name]
             return buffer.data[: np.prod(buffer.shape)].reshape(buffer.shape)
 
         def set_func(self, data):
-            buffer = self.__buffer_data__[field.name]
-            buffer.shape = data.shape
-            len = np.prod(data.shape)
-            assert len <= buffer.data.size
-            buffer.data[:len] = (data if raw else data.numpy()).flatten()
+            if mode == ModelRuntimeType.EagerExecution:
+                buffer = self.__buffer_data__[field.name]
+                buffer.shape = data.shape
+                len = np.prod(data.shape)
+                assert len <= buffer.data.size
+                buffer.data[:len] = (data if raw else data.numpy()).flatten()
+            elif mode == ModelRuntimeType.GraphExecution:
+                assert not raw
+                import tensorflow.compat.v1 as tf1
+
+                assert field.name is None or field.name == f"import/{data.name}"
+                # TODO: record used output names in graph mode
+            else:
+                raise NotImplementedError("OfflineExecution not supported for now")
 
         def del_func(_):
             raise AssertionError("Not supported for output tensor")

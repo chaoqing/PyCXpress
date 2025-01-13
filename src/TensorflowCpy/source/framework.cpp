@@ -61,12 +61,11 @@ namespace se = stream_executor;
 #endif
 
 
-#pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wunused-variable"
 #define UNUSED(expr)  \
     do {              \
         (void)(expr); \
     } while (0)
+
 class TensorBufferView : public tf::TensorBuffer {
     std::size_t m_len;
 
@@ -131,13 +130,11 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
     // load ops
     tf::Env* env = tf::Env::Default();
     UNUSED(env);  // TODO: handle this unused
+
     tf::Status status;
 
-
-    assert(tf::OpRegistry::Global()->ProcessRegistrations().ok());
-    tf::OpRegistry::Global()->DeferRegistrations();
-
     const fs::path ops_dir{"./sample/models/ops/"};
+    tf::OpRegistry::Global()->DeferRegistrations();
     if (fs::is_directory(ops_dir)) {
         for (const auto& op_so : fs::directory_iterator{ops_dir}) {
             if (op_so.is_directory()) continue;
@@ -146,7 +143,8 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
             assert(status.ok());
         }
     }
-    assert(tf::OpRegistry::Global()->ProcessRegistrations().ok());
+    status = tf::OpRegistry::Global()->ProcessRegistrations();
+    assert(status.ok());
 
     // load model
     tf::SavedModelBundle model;
@@ -158,7 +156,8 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
 
     // get devices
     const tf::DeviceMgr* deviceMgr = nullptr;
-    assert(model.GetSession()->LocalDeviceManager(&deviceMgr).ok());
+    status                         = model.GetSession()->LocalDeviceManager(&deviceMgr);
+    assert(status.ok());
     tf::Device* cpuDevice = nullptr;
     for (auto d : deviceMgr->ListDevices()) {
         if (d->device_type() == "CPU") {
@@ -167,7 +166,9 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
         }
     }
     std::vector<tensorflow::DeviceAttributes> devices;
-    assert(model.GetSession()->ListDevices(&devices).ok());
+
+    status = model.GetSession()->ListDevices(&devices);
+    assert(status.ok());
     auto iter = std::find_if(devices.begin(), devices.end(),
                              [](const auto& d) { return d.device_type() == "GPU"; });
     assert(iter != devices.end());
@@ -242,10 +243,13 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
     std::cerr << "After B GPU ======== \n" << gpuAllocator->GetStats()->DebugString() << std::endl;
 
     int64_t totalMem = 0, freeMem = 0;
-    assert(streamExecutor->DeviceMemoryUsage(&freeMem, &totalMem));
-    std::cerr << "stream " << streamExecutor->GetDeviceDescription().pci_bus_id() << " have "
-              << freeMem / 1024. / 1024 << " out of " << totalMem / 1024. / 1024 << " MB memory"
-              << std::endl;
+    auto    status_ok = streamExecutor->DeviceMemoryUsage(&freeMem, &totalMem);
+    if (status_ok) {
+        std::cerr << "stream " << streamExecutor->GetDeviceDescription().pci_bus_id() << " have "
+                  << freeMem / 1024. / 1024 << " out of " << totalMem / 1024. / 1024 << " MB memory"
+                  << std::endl;
+    }
+    assert(status_ok);
 
 
     // model to function handler
@@ -290,10 +294,9 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
         input_tensor_B_host[i] = i;
     }
     se::DeviceMemoryBase ptr{input_tensor_B.data(), input_tensor_B.NumElements() * sizeof(uint8_t)};
-    assert(streamExecutor
-               ->SynchronousMemcpyH2D(input_tensor_B_host.data(),
-                                      input_tensor_B_host.size() * sizeof(uint8_t), &ptr)
-               .ok());
+    status = streamExecutor->SynchronousMemcpyH2D(
+        input_tensor_B_host.data(), input_tensor_B_host.size() * sizeof(uint8_t), &ptr);
+    assert(status.ok());
     // assert(streamExecutor->SynchronizeAllActivity());
 
     // run the model
@@ -306,19 +309,19 @@ int tensorflow_cpy::main_whole_flow(int argc, char** argv) {
     const auto&          result = outputs.front();
     se::DeviceMemoryBase res_ptr{result.data(), result.NumElements() * sizeof(uint8_t)};
     uint8_t*             hostResPtr = (uint8_t*)hostTensor.data();
-    assert(streamExecutor
-               ->SynchronousMemcpyD2H(res_ptr, result.NumElements() * sizeof(uint8_t), hostResPtr)
-               .ok());
+    status = streamExecutor->SynchronousMemcpyD2H(res_ptr, result.NumElements() * sizeof(uint8_t),
+                                                  hostResPtr);
+    assert(status.ok());
     std::cout << "result shape: " << result.dims() << "(" << result.dim_size(0) << ", "
               << result.dim_size(1) << ")" << std::endl;
     for (long i = 0; i < result.NumElements(); i++) {
         std::cout << "  " << i << " -> " << int(hostResPtr[i]) << std::endl;
     }
 
-    assert(model.GetSession()->ReleaseCallable(modelFuncHandle).ok());
+    status = model.GetSession()->ReleaseCallable(modelFuncHandle);
+    assert(status.ok());
 
     std::cerr << "completed" << std::endl;
 
     return 0;
 }
-#pragma GCC diagnostic pop
